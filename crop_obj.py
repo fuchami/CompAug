@@ -12,25 +12,27 @@ import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
 
-def to_grayscale(path):
-    img = cv2.imread(path)
-    grayed = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    return grayed
 
+# matplotlibのフォーマット変換
 def to_plt_format(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 def binary_threshold(path):
     img = cv2.imread(path)
     grayed = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    under_threshold = 100
-    upper_threshold = 230
-    maxvalue = 255
-    th, drop_back = cv2.threshold(grayed, under_threshold, maxvalue, cv2.THRESH_BINARY)
-    th, clarify_born = cv2.threshold(grayed, upper_threshold, maxvalue, cv2.THRESH_BINARY)
-    merged = np.minimum(drop_back, clarify_born)
 
-    return merged
+    under_threshold = 220
+    upper_threshold = 30 
+    maxvalue = 255
+
+    th, drop_back = cv2.threshold(grayed, under_threshold, maxvalue, cv2.THRESH_BINARY)
+    #th, clarify_born = cv2.threshold(grayed, upper_threshold, maxvalue, cv2.THRESH_BINARY_INV)
+    #merged = np.minimum(drop_back, clarify_born)
+
+    plt.imshow(drop_back, 'gray')
+    plt.show()
+
+    return drop_back
 
 def paddig_position(x, y, w, h, p):
     return x-p, y-p, w+p *2, h+p *2
@@ -70,7 +72,7 @@ def detect_contour(path, min_size):
         
         # rectangle area
         x, y, w, h = cv2.boundingRect(c)
-        x, y, w, h = paddig_position(x, y, w, h, 50)
+        x, y, w, h = paddig_position(x, y, w, h, 100)
 
         # crop the image
         cropped = forcrop[y:(y+h), x:(x+w)]
@@ -80,12 +82,15 @@ def detect_contour(path, min_size):
         # draw contour
         cv2.drawContours(contoured, c, -1, (0, 0, 255), -3) # contour
         cv2.rectangle(contoured, (x, y), (x+w, y+h), (0, 255, 0), 3) # ectangle
+
+        # 切り取って保存
+        cv2.imwrite('./frisk.jpg', contoured[y:y+h, x:x+w])
     
     return contoured, crops
 
 def main():
-    path = '../SINEPOST/train/toothpaste/camNo_22711133_00005403_20_ex26000.png'
-    min_size = 512
+    path = '../SINEPOST/train/frisk/camNo_22711169_00005239_16_ex20000.png'
+    min_size = 64
 
     contoured, crops = detect_contour(path, min_size)
     contoured = to_plt_format(contoured)
