@@ -19,12 +19,14 @@ def paddig_position(x, y, w, h, p):
     return x-p, y-p, w + p*2, h + p*2
 
 #  輪郭抽出
-def getContours(img, diff_img):
-    img = cv2.imread(img, 1)
+def getContours(img_path, diff_img, tarpath):
+    print("get contours:", img_path)
+    c = 0
+    img = cv2.imread(img_path, 1)
     contours = cv2.findContours(diff_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
     result_list = []
 
-    print(len(contours))
+    #print(len(contours))
     area_list =[]
 
     for cnt in contours:
@@ -34,15 +36,30 @@ def getContours(img, diff_img):
         area_list.append(area)
 
     # 面積最大のやつをひっこぬく
-    x, y, w, h = cv2.boundingRect(contours[area_list.index(max(area_list))])
-    x, y, w, h = paddig_position(x, y, w, h, 100)
+    for i in range(2):
 
-    cv2.rectangle(img, (x,y), (x+w, y+h), (0, 255, 0), 3)
+        max_idx = area_list.index(max(area_list))
+        x, y, w, h = cv2.boundingRect(contours[max_idx])
 
-    result = np.asarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        contours.pop(max_idx)
+        area_list.pop(max_idx)
 
-    plt.imshow(result)
-    plt.show()
+        x, y, w, h = paddig_position(x, y, w, h, 100)
+        #cv2.rectangle(img, (x,y), (x+w, y+h), (0, 255, 0), 3)
+
+        # 切り取り保存        
+        basename = os.path.basename(img_path)
+        name, ext = os.path.splitext(basename)
+        save_path = tarpath + name + '_' + str(i) + ext
+        print("save img:", save_path)
+
+        dst = img[y:(y+h), x:(x+w)]
+        cv2.imwrite(save_path, dst)
+        c+=1
+
+        # result = np.asarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        # plt.imshow(result)
+        # plt.show()
 
     return 
 
@@ -54,7 +71,7 @@ def getdiff(img, bgimg):
     # gaussian blur
     bgimg = cv2.GaussianBlur(bgimg, (11,11), 0)
     # binary img 
-    bgimg = cv2.threshold(bgimg, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    bgimg = cv2.threshold(bgimg, 200, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
     """ object img """
     img = cv2.imread(img, 1)
@@ -95,13 +112,12 @@ def main(args):
 
     # 背景画像
     for image_path in image_path_list:
-        print(image_path)
 
         # 背景画像を決定
         num = image_path.split('_')
-        print(num[1]) # => 22711165
+        #print(num[1]) # => 22711165
         bgimg = [x for x in background_list if num[1] in x]
-        print(bgimg) # => ['../datasets/bisco/camNo_22737280_00005485_ex24000_background.png']
+        #print(bgimg) # => ['../datasets/bisco/camNo_22737280_00005485_ex24000_background.png']
 
         # 対応するものがなければ終了
         if not bgimg:
@@ -112,7 +128,7 @@ def main(args):
         # 背景差分
         diff_img = getdiff(image_path, bgimg[0])
         # 輪郭抽出
-        getContours(image_path, diff_img)
+        getContours(image_path, diff_img, args.tarpath)
 
     return
 
@@ -120,7 +136,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="diff from background and cropping object")
 
     parser.add_argument('--srcpath', '-s', type=str, default='../datasets/toothbrush/')
-    parser.add_argument('--tarpath', '-t', type=str, default='')
+    parser.add_argument('--tarpath', '-t', type=str, default='../datasets_crop/toothbrush/')
     parser.add_argument('--lowexposure', '-l', type=str, default='ex500')
 
     args = parser.parse_args()
