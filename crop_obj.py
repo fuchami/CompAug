@@ -8,7 +8,7 @@ https://qiita.com/icoxfog417/items/53e61496ad980c41a08e
 
 """
 
-import os, sys
+import os, sys, argparse
 import glob
 import numpy as np
 import cv2
@@ -42,8 +42,8 @@ def paddig_position(x, y, w, h, p):
 
 def resize_image(img, size):
     img_size = img.shape[:2]
-    if img_size[0] > size[1] or img_size[1] > size[0]:
-        raise Exception("img is larger than size")
+    # if img_size[0] > size[1] or img_size[1] > size[0]:
+        # raise Exception("img is larger than size")
 
     row = (size[1] - img_size[0]) // 2
     col = (size[0] - img_size[1]) // 2
@@ -56,9 +56,9 @@ def resize_image(img, size):
 
     return filled
 
-def detect_contour(class_path, path, tar_path, min_size, cnt):
+def detect_contour(path):
+    cnt=0
     contoured = cv2.imread(path)
-    forcrop = cv2.imread(path)
 
     # make binary image
     obj = binary_threshold(path)
@@ -66,51 +66,58 @@ def detect_contour(class_path, path, tar_path, min_size, cnt):
 
     # detect contour
     im2, contours, hierarchy = cv2.findContours(obj, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    print(contours)
 
     crops = []
     # draw contour
     for c in contours:
-        if cv2.contourArea(c) < min_size:
+        if cv2.contourArea(c) < 100:
             continue
         
         # rectangle area
         x, y, w, h = cv2.boundingRect(c)
-        x, y, w, h = paddig_position(x, y, w, h, 50)
+        x, y, w, h = paddig_position(x, y, w, h, 60)
+        print("はい")
+        print(x,y,w,h)
 
-        # crop the image
-        cropped = forcrop[y:(y+h), x:(x+w)]
-        cropped = resize_image(cropped, (1024,1024))
-        crops.append(cropped)
-
-        # draw contour
-        #cv2.drawContours(contoured, c, -1, (0, 0, 255), -3) # contour
-        cv2.rectangle(contoured, (x, y), (x+w, y+h), (0, 255, 0), 3) # ectangle
-
-        # 切り取って保存
-        cv2.imwrite( tar_path + '/' + str(cnt) + str(class_path) + '.jpg', cropped)
+        dst = contoured[y:(y+h), x:(x+w)]
+        dst = resize_image(dst, (1024,1024))
+        
+        save_path = str(0) + '_' + os.path.basename(path)
+        cv2.imwrite(save_path, dst)
         cnt+=1
 
-        im_list = []
-        im_list = np.asarray(contoured)
-        plt.imshow(im_list)
-        plt.show()
-    
     print(cnt)
-   
-    return cnt
 
-def main():
-    src_path = '../SINEPOST/original/train/'
-    tar_path = '../SINEPOST/scropped/train/'
+def main(args):
+    background_list = []
 
-    min_size = 100
+    # ディレクトリ下のファイルをすべてリスト化
+    total_image_path_list = glob.glob(args.srcpath + '*')
 
-    class_path_list = os.listdir(src_path)
+    # 保存先のディレクトリを作成
+    if not os.path.exists(args.tarpath):
+        os.makedirs(args.tarpath)
 
+    # 低露出画像は除去
+    image_path_list = [x for x in total_image_path_list if not args.lowexposure in x]
+    print("remove low exposure images")
+
+    # 背景画像を除去
+    for i in image_path_list:
+        if 'back' in i:
+            background_list.append(i) # 背景画像用のリストへ
+            image_path_list.remove(i) # いらない子なのではじく
+    print("remove background image")
+
+    print("images:", len(image_path_list))
+    print("back ground image", len(background_list))
+
+    for image_path in image_path_list:
+        print(image_path)
+        detect_contour(image_path)
+
+    """
     for class_path in class_path_list:
-        cnt = 0
         print(class_path)
         img_path_list = os.listdir(src_path+class_path)
 
@@ -125,7 +132,6 @@ def main():
 
             cnt = detect_contour(class_path, class_src_path, class_tar_path, min_size, cnt)
 
-    """
     #contoured, crops = detect_contour(path, min_size)
     # contoured = to_plt_format(contoured)
 
@@ -135,4 +141,12 @@ def main():
     """
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="diff from background and cropping object")
+
+    parser.add_argument('--srcpath', '-s', type=str, default='../datasets/bisco/')
+    parser.add_argument('--tarpath', '-t', type=str, default='../datasets_crop/toothbrush/')
+    parser.add_argument('--lowexposure', '-l', type=str, default='ex500')
+
+    args = parser.parse_args()
+
+    main(args)
