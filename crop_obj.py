@@ -66,6 +66,8 @@ def detect_contour(class_path, path, tar_path, min_size, cnt):
 
     # detect contour
     im2, contours, hierarchy = cv2.findContours(obj, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    print(contours)
 
     crops = []
     # draw contour
@@ -89,6 +91,11 @@ def detect_contour(class_path, path, tar_path, min_size, cnt):
         # 切り取って保存
         cv2.imwrite( tar_path + '/' + str(cnt) + str(class_path) + '.jpg', cropped)
         cnt+=1
+
+        im_list = []
+        im_list = np.asarray(contoured)
+        plt.imshow(im_list)
+        plt.show()
     
     print(cnt)
    
