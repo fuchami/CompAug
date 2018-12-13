@@ -4,7 +4,7 @@ from keras.layers import Conv2D, MaxPooling2, Dense
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout
 
 # tiny cnn like VGG
-def tinycnn_model(input_shape):
+def tinycnn_model(input_shape, classes):
 
     model = Sequential()
     model.add(Conv2D(32, (3,3), padding='same', input_shape=input_shape))
@@ -28,7 +28,7 @@ def tinycnn_model(input_shape):
     model.add(Activation('relu'))
     model.add(Dropout(0.25))
 
-    model.add(Dense(5))
+    model.add(Dense(classes))
     model.add(Activation('softmax'))
 
     model.summary()
