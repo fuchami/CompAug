@@ -44,7 +44,7 @@ def getContours(img_path, diff_img, tarpath, areas_max):
         contours.pop(max_idx)
         area_list.pop(max_idx)
 
-        x, y, w, h = paddig_position(x, y, w, h, 100)
+        x, y, w, h = paddig_position(x, y, w, h, 150)
 
         # 短形描画
         # cv2.rectangle(img, (x,y), (x+w, y+h), (0, 255, 0), 3)
@@ -138,8 +138,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="diff from background and cropping object")
 
-    parser.add_argument('--srcpath', '-s', type=str, default='../datasets/clearclean/')
-    parser.add_argument('--tarpath', '-t', type=str, default='../datasets_crop/clearclean/')
+    parser.add_argument('--srcpath', '-s', type=str, default='../datasets/toothbrush/')
+    parser.add_argument('--tarpath', '-t', type=str, default='../datasets_crop/toothbrush/')
     parser.add_argument('--exposure', '-l', type=str, default='ex500')
     parser.add_argument('--threshold', type=int, default=2)
 
