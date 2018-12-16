@@ -5,23 +5,22 @@ import h5py
 
 import numpy as np
 import keras
-from keras.optimizers import Adam
+from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
 
 import model
 
-
 def main(args, classes):
     """ select model"""
 
     """ log params  """
-    para_str = 'CNNmodel_Epoch{}_imgsize{}_Batchsize{}_Adam'.format(
+    para_str = 'CNNmodel_Epoch{}_imgsize{}_Batchsize{}_SGD'.format(
         args.epochs, args.imgsize, args.batchsize)
 
     """ define callback """
-    if not os.path.exists('./tb_log/'):
+    if not os.path.exists('./model_images/'):
         os.makedirs('./model_images/')
     if not os.path.exists('./csv_log/'):
         os.makedirs('./csv_log/')
@@ -30,8 +29,8 @@ def main(args, classes):
     csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
 
     """ load image using image data generator """
-    train_datagen = ImageDataGenerator()
-    valid_datagen = ImageDataGenerator()
+    train_datagen = ImageDataGenerator(rescale=1.0 / 255)
+    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
     train_generator = train_datagen.flow_from_directory(
         args.trainpath,
@@ -62,9 +61,9 @@ def main(args, classes):
     """ train model """
     history = cnn_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch = 120//32,
+        steps_per_epoch = 120//args.batchsize,
         nb_epoch = args.epochs,
-        callbacks=[tb_cb, csv_logger, reduce_lr],
+        callbacks=[csv_logger, reduce_lr],
         validation_data = valid_generator,
         validation_steps =15)
 
@@ -78,12 +77,11 @@ if __name__ == "__main__":
     print ("classes: ", len(classes))
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--trainpath', type=str, default='../dataset/train/')
-    parser.add_argument('--validpath', type=str, default='../dataset/valid/')
-    parser.add_argument('--testpath', type=str, default='../dataset/test/')
+    parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/train_full/')
+    parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=50)
     parser.add_argument('--imgsize', '-s', type=int, default=256)
-    parser.add_argument('--batchsize', '-b', type=int, default=32)
+    parser.add_argument('--batchsize', '-b', type=int, default=16)
     # parser.add_argument('--mode', '-m', )
 
     args = parser.parse_args()
