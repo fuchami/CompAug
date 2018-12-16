@@ -38,10 +38,12 @@ def split_test_train_valid(args):
         random.shuffle(img_list)
 
         # 移動先のディレクトリがなければ作成
-        if not os.path.exists(args.tarpath + 'train/' + class_path):
-            os.makedirs(args.tarpath + 'train/' + class_path)
-        if not os.path.exists(args.tarpath + 'test/' + class_path):
-            os.makedirs(args.tarpath + 'test/' + class_path)
+        if not os.path.exists(args.tarpath + 'train_full/' + class_path):
+            os.makedirs(args.tarpath + 'train_full/' + class_path)
+        if not os.path.exists(args.tarpath + 'train_half/' + class_path):
+            os.makedirs(args.tarpath + 'train_half/' + class_path)
+        if not os.path.exists(args.tarpath + 'train_tiny/' + class_path):
+            os.makedirs(args.tarpath + 'train_tiny/' + class_path)
         if not os.path.exists(args.tarpath + 'valid/' + class_path):
             os.makedirs(args.tarpath + 'valid/' + class_path)
 
@@ -49,26 +51,44 @@ def split_test_train_valid(args):
         for i in img_list:
             print(i)
             shutil.copyfile("%s%s/%s" % (args.srcpath, class_path, i),
-                            "%strain/%s/%s" % (args.tarpath, class_path, i))
+                            "%strain_full/%s/%s" % (args.tarpath, class_path, i))
 
         img_num = len(img_list)//10
         print("img_num: ", img_num)
         choice = np.random.choice(img_list, img_num * 2 , replace=False)
 
-        # 10%を検証データに, 10%をテストデータに移動
-        for i in choice[:img_num]:
-            shutil.move("%strain/%s/%s" % (args.tarpath, class_path, i),
+        # 20%を検証データに
+        for i in choice[:img_num*2]:
+            shutil.move("%strain_full/%s/%s" % (args.tarpath, class_path, i),
                         "%svalid/%s/%s" % (args.tarpath, class_path, i))
+        """
         for i in choice[img_num:]:
             shutil.move("%strain/%s/%s" % (args.tarpath, class_path, i),
                         "%stest/%s/%s" % (args.tarpath, class_path, i))
+        """
+
+        # ハーフサイズの訓練データの作成
+        img_list = os.listdir(args.tarpath+ 'train_full/' + class_path)
+        random.shuffle(img_list)
+        choice = np.random.choice(img_list, len(img_list)//2 , replace=False)
+        for i in choice[:len(img_list)//2]:
+            shutil.copyfile("%strain_full/%s/%s" % (args.tarpath, class_path, i),
+                            "%strain_half/%s/%s" % (args.tarpath, class_path, i))
+        
+        # もっと小さい訓練データの作成
+        random.shuffle(img_list)
+        choice = np.random.choice(img_list, len(img_list)//2 , replace=False)
+        for i in choice[:30]:
+            shutil.copyfile("%strain_full/%s/%s" % (args.tarpath, class_path, i),
+                            "%strain_tiny/%s/%s" % (args.tarpath, class_path, i))
+
 
     return
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='datasets split train/test/valid')
-    parser.add_argument('--srcpath', '-s', type=str, default='../datasets_crop/')
-    parser.add_argument('--tarpath', '-t', type=str, default='../dataset/')
+    parser.add_argument('--srcpath', '-s', type=str, default='../DATASETS/datasets_crop/')
+    parser.add_argument('--tarpath', '-t', type=str, default='../DATASETS/compare_dataset/')
 
     args = parser.parse_args()
     split_test_train_valid(args)
