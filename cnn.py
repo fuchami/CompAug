@@ -74,7 +74,7 @@ def main(args, classes):
         validation_steps =15)
 
     # 学習履歴をプロット
-    tools.plot_history(history)
+    tools.plot_history(history, para_str)
 
     # 混同行列をプロット
     Y_pred = cnn_model.predict_generator(valid_generator)

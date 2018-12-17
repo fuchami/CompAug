@@ -18,7 +18,7 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('accuracy')
     plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.savefig('accuracy.png')
+    plt.savefig('./train_log/' + parastr +  '/accuracy.png')
     plt.close()
 
     # lossの履歴をプロット
@@ -28,11 +28,11 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('accuracy')
     plt.legend(['loss', 'val_loss'], loc='lower right')
-    plt.savefig('accuracy.png')
+    plt.savefig('./train_log/' + parastr +'/accuracy.png')
     plt.close()
 
  # 混同行列のヒートマップをプロット
-def print_cmx(y_true, y_pred):
+def print_cmx(y_true, y_pred, parastr):
     labels = sorted(list(set(y_true)))
     cmx_data = confusion_matrix(y_true, y_pred, labels=labels)
 
@@ -43,6 +43,6 @@ def print_cmx(y_true, y_pred):
     plt.title("Confusion Matrix")
     plt.xlabel("predict classes")
     plt.ylabel("true classes")
-    plt.savefig("c_matrix.png")
+    plt.savefig('./train_log/' + parastr + '/confution_mx.png')
     plt.close()
     
