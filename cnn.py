@@ -13,6 +13,7 @@ from sklearn.metrics import confusion_matrix
 
 import model
 import tools
+import load
 
 def main(args, classes):
     """ select model"""
@@ -32,28 +33,10 @@ def main(args, classes):
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=0.5, verbose=1, min_lr=1e-9)
     csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
 
+
     """ load image using image data generator """
-    train_datagen = ImageDataGenerator(rescale=1.0 / 255)
-    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
+    train_generator, valid_generator = load.nonAugmentGenerator(args, classes)
 
-    train_generator = train_datagen.flow_from_directory(
-        args.trainpath,
-        target_size=(args.imgsize, args.imgsize),
-        color_mode='rgb',
-        classes=classes,
-        class_mode='categorical',
-        batch_size=args.batchsize,
-        shuffle=True)
-
-    valid_generator = valid_datagen.flow_from_directory(
-        directory=args.validpath,
-        target_size=(args.imgsize, args.imgsize),
-        color_mode='rgb',
-        classes=classes,
-        class_mode='categorical')
-    
-    print("valid_generator")
-    print(valid_generator)
 
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
