@@ -1,7 +1,8 @@
 # coding:utf-8
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
-from keras.layers import Activation, Flatten, BatchNormalization, Dropout
+from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
+from keras.applications.inception_v3 import InceptionV3
 
 # 小さな畳み込みニューラルネットワーク
 def tinycnn_model(input_shape, classes):
@@ -35,6 +36,18 @@ def tinycnn_model(input_shape, classes):
 
 def inceptionv3_finetune_model(input_shape, classes):
 
-    model = Sequential()
+    Input_shape = Input(shape=input_shape)
+    base_model = InceptionV3(weights='imagenet', include_top=False, pooling='avg', input_tensor=Input_shape)
+    base_model.trainable = False
+    base_model.summary()
+
+    x_in = Input_shape
+    x = base_model(x_in)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    x = Dense(classes, activation='softmax')(x)
+    model = Model(x_in, x)
+
+    model.summary()
 
     return model
