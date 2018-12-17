@@ -9,7 +9,7 @@ from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 
 import model
 import tools
@@ -69,7 +69,7 @@ def main(args, classes):
         generator=train_generator,
         steps_per_epoch = 120//args.batchsize,
         nb_epoch = args.epochs,
-        callbacks=[csv_logger, reduce_lr],
+        callbacks=[csv_logger],
         validation_data = valid_generator,
         validation_steps =15)
 
@@ -77,10 +77,17 @@ def main(args, classes):
     tools.plot_history(history, para_str)
 
     # 混同行列をプロット
+    valid_generator.reset()
     Y_pred = cnn_model.predict_generator(valid_generator)
     y_pred = np.argmax(Y_pred, axis=1)
+
+    true_classes = valid_generator.classes
+    class_label = list(valid_generator.class_indices.keys())
+
     print('confusion matrix')
-    print(confusion_matrix(valid_generator.classes, y_pred))
+    print(confusion_matrix(true_classes, y_pred))
+    # tools.confusion_matrix(valid_generator.classes, y_pred, para_str, classes)
+    print(classification_report(valid_generator.classes, y_pred, target_names=class_label))
 
 
 if __name__ == "__main__":

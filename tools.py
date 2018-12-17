@@ -28,15 +28,14 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('accuracy')
     plt.legend(['loss', 'val_loss'], loc='lower right')
-    plt.savefig('./train_log/' + parastr +'/accuracy.png')
+    plt.savefig('./train_log/' + parastr +'/loss.png')
     plt.close()
 
  # 混同行列のヒートマップをプロット
 def print_cmx(y_true, y_pred, parastr):
-    labels = sorted(list(set(y_true)))
-    cmx_data = confusion_matrix(y_true, y_pred, labels=labels)
+    cmx_data = confusion_matrix(y_true, y_pred, labels=classes)
 
-    df_cmx = pd.DataFrame(cxm_data, index=labels, columns=labels)
+    df_cmx = pd.DataFrame(cxm_data, index=labels, columns=classes)
 
     plt.figure(figsize = (10, 7))
     sn.heatmap(df_cmx, annot=True, fmt="d")
