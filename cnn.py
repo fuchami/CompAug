@@ -9,30 +9,10 @@ from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
+from sklearn.metrics import confusion_matrix
 
 import model
-
-def plot_history(history):
-    # print(history.history.keys())
-
-    # 精度の履歴をプロット
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('model accuracy')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.show()
-
-    # 損失の履歴をプロット
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.legend(['loss', 'val_loss'], loc='lower right')
-    plt.show()
-
+import tools
 
 def main(args, classes):
     """ select model"""
@@ -46,6 +26,8 @@ def main(args, classes):
         os.makedirs('./model_images/')
     if not os.path.exists('./csv_log/'):
         os.makedirs('./csv_log/')
+    if not os.path.exists('./train_log/' + para_str + '/'):
+        os.makedirs('./train_log/' + para_str + '/')
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=0.5, verbose=1, min_lr=1e-9)
     csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
@@ -68,8 +50,10 @@ def main(args, classes):
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
         classes=classes,
-        class_mode='categorical',
-        shuffle=True)
+        class_mode='categorical')
+    
+    print("valid_generator")
+    print(valid_generator)
 
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
@@ -90,11 +74,14 @@ def main(args, classes):
         validation_steps =15)
 
     # 学習履歴をプロット
-    plot_history(history)
+    tools.plot_history(history)
 
-    """ evaluate model """
-    # score = cnn_model.evaluate_generator(test_generator)
-    # print(score)
+    # 混同行列をプロット
+    Y_pred = cnn_model.predict_generator(valid_generator)
+    y_pred = np.argmax(Y_pred, axis=1)
+    print('confusion matrix')
+    print(confusion_matrix(valid_generator.classes, y_pred))
+
 
 if __name__ == "__main__":
 
