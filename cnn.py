@@ -50,7 +50,8 @@ def main(args, classes):
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
         classes=classes,
-        class_mode='categorical')
+        class_mode='categorical',
+        batch_size=1)
     
     print("valid_generator")
     print(valid_generator)
@@ -67,7 +68,7 @@ def main(args, classes):
     """ train model """
     history = cnn_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch = 120//args.batchsize,
+        steps_per_epoch = 600//args.batchsize,
         nb_epoch = args.epochs,
         callbacks=[csv_logger],
         validation_data = valid_generator,
@@ -78,7 +79,7 @@ def main(args, classes):
 
     # 混同行列をプロット
     valid_generator.reset()
-    Y_pred = cnn_model.predict_generator(valid_generator)
+    Y_pred = cnn_model.predict_generator(valid_generator, steps=150)
     y_pred = np.argmax(Y_pred, axis=1)
 
     true_classes = valid_generator.classes
