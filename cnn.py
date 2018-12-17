@@ -12,6 +12,28 @@ from keras.preprocessing.image import ImageDataGenerator
 
 import model
 
+def plot_history(history):
+    # print(history.history.keys())
+
+    # 精度の履歴をプロット
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('accuracy')
+    plt.legend(['acc', 'val_acc'], loc='lower right')
+    plt.show()
+
+    # 損失の履歴をプロット
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.legend(['loss', 'val_loss'], loc='lower right')
+    plt.show()
+
+
 def main(args, classes):
     """ select model"""
 
@@ -66,6 +88,9 @@ def main(args, classes):
         callbacks=[csv_logger, reduce_lr],
         validation_data = valid_generator,
         validation_steps =15)
+
+    # 学習履歴をプロット
+    plot_history(history)
 
     """ evaluate model """
     # score = cnn_model.evaluate_generator(test_generator)
