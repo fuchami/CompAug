@@ -33,7 +33,39 @@ def tinycnn_model(input_shape, classes):
     model.summary()
     return model
 
+# ガチ構成のCNNモデル
+def cnn_fullmodel(input_shape, classes):
 
+    model = Sequential()
+    model.add(Conv2D(32, (3,3), padding='same', activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    
+    model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
+    model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(BatchNormalization())
+
+    model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
+    model.add(Conv2D(256, (3,3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(BatchNormalization())
+
+    model.add(GlobalAveragePooling2D())
+    model.add(Dense(1028))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(classes))
+    model.add(Activation('softmax'))
+
+    model.summary()
+    return model
+
+# inceptionV3をfine tuning
 def inceptionv3_finetune_model(input_shape, classes):
 
     Input_shape = Input(shape=input_shape)
@@ -43,8 +75,10 @@ def inceptionv3_finetune_model(input_shape, classes):
 
     x_in = Input_shape
     x = base_model(x_in)
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.5)(x)
+    x = Dense(2048, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(0.3)(x)
     x = Dense(classes, activation='softmax')(x)
     model = Model(x_in, x)
 
