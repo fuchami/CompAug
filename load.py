@@ -78,7 +78,7 @@ class MyImageDataGenerator(ImageDataGenerator):
         # 拡張処理のパラメータ
         assert mix_up_alpha >= 0.0
         self.mix_up_alpha = mix_up_alpha
-        assert random_crop = None or len(random_crop) == 2
+        assert random_crop == None or len(random_crop) == 2
         self.random_crop_size = random_crop
 
         """ Random Crop """
@@ -112,10 +112,11 @@ class MyImageDataGenerator(ImageDataGenerator):
                                 follow_links=False, subset=None, interpolation='nearest'):
             # 親クラスのflow_from_directory
             batches = super().flow_from_directory(directory, target_size, color_mode, classes, class_mode,
-                                                batch_size, shuffle, seed, save_to_dir,s save_prefix, 
+                                                batch_size, shuffle, seed, save_to_dir, save_prefix, 
                                                 save_format, follow_links, subset, interpolation)
             # 拡張処理
             while True:
+                batch_x, batch_y = next(batches)
                 """ mix up """
                 if self.mix_up_alpha > 0:
                     while True:
