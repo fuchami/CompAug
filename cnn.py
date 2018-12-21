@@ -19,19 +19,18 @@ import load
 def main(args, classes):
 
     """ log params  """
-    para_str = 'model_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_SGD'.format(
-        args.model, args.aug_mode, args.epochs, args.imgsize, args.batchsize)
+    para_str = 'model_{}_transize_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
+        args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
+    print("start this params CNN train: ", para_str)
 
     """ define callback """
     if not os.path.exists('./model_images/'):
         os.makedirs('./model_images/')
-    if not os.path.exists('./csv_log/'):
-        os.makedirs('./csv_log/')
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=0.5, verbose=1, min_lr=1e-9)
-    csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
+    csv_logger = CSVLogger('./train_log/' + para_str + '.csv', separator=',')
 
 
     """ load image using image data generator """
@@ -91,6 +90,9 @@ def main(args, classes):
         callbacks=[csv_logger],
         validation_data = valid_generator,
         validation_steps = valid_generator.samples // valid_generator.batch_size)
+
+    # 学習履歴をプロット
+    tools.plot_history(history, para_str)
     
     """ evaluate model """
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
@@ -112,8 +114,6 @@ def main(args, classes):
     cm = confusion_matrix(ground_truth, predicted_classes)
     print(cm)
 
-    # 学習履歴をプロット
-    tools.plot_history(history, para_str)
 
 if __name__ == "__main__":
 
@@ -121,7 +121,8 @@ if __name__ == "__main__":
     print ("classes: ", len(classes))
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/train_full/')
+    parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
+    parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=50)
     parser.add_argument('--imgsize', '-s', type=int, default=128)

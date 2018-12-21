@@ -13,11 +13,20 @@ from keras.preprocessing.image import ImageDataGenerator
 
 # 水増し無しのジェネレーター
 def nonAugmentGenerator(args, classes):
+    if args.trainsize == 'full':
+        trainpath = args.trainpath + 'train_full/'
+    elif args.trainsize == 'half':
+        trainpath = args.trainpath + 'train_half/'
+    elif args.trainsize == 'tiny':
+        trainpath = args.trainpath + 'train_tiny/'
+    else:
+        raise SyntaxError("please select optimizer: 'full' or 'half' or 'tiny'. ")
+
     train_datagen = ImageDataGenerator()
     valid_datagen = ImageDataGenerator()
 
     train_generator = train_datagen.flow_from_directory(
-        args.trainpath,
+        trainpath,
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
         class_mode='categorical',
@@ -35,6 +44,15 @@ def nonAugmentGenerator(args, classes):
 
 # 水増し有りのジェネレーター
 def AugmentGenerator(args, classes):
+    if args.trainsize == 'full':
+        trainpath = args.trainpath + 'train_full/'
+    elif args.trainsize == 'half':
+        trainpath = args.trainpath + 'train_half/'
+    elif args.trainsize == 'tiny':
+        trainpath = args.trainpath + 'train_tiny/'
+    else:
+        raise SyntaxError("please select optimizer: 'full' or 'half' or 'tiny'. ")
+
     train_datagen = ImageDataGenerator(rescale=1.0 / 255,
                                         shear_range=0.2,
                                         zoom_range=0.2,
@@ -43,7 +61,7 @@ def AugmentGenerator(args, classes):
     valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
     train_generator = train_datagen.flow_from_directory(
-        args.trainpath,
+        trainpath,
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
         classes=classes,
@@ -86,7 +104,7 @@ class MyImageDataGenerator(ImageDataGenerator):
             # Note: image_data_format is 'channel_last'
             assert original_img.shape[2] == 3
             if original_img.shape[0] < self.random_crop_size[0] or original_img.shape[1]:
-                raise ValueError(f"Invalid random_crop_size : original = {original_img.shape}, crop_size={self.random_crop_size}" )
+                raise ValueError("おつ" )
             
             height, width = original_img.shape[0], original_img.shape[1]
             dy, dx = self.random_crop_size
