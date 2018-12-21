@@ -94,6 +94,9 @@ def main(args, classes):
     # 学習履歴をプロット
     tools.plot_history(history, para_str)
     
+    # 学習履歴をプロット
+    tools.plot_history(history, para_str)
+
     """ evaluate model """
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
@@ -102,8 +105,14 @@ def main(args, classes):
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
 
-    """ confusion matrix """
-    
+    """ 学習結果をテキスト出力 """
+    with open('./train_log/log.txt', 'a') as f:
+        f.write('--------------------------------------')
+        f.write(para_str)
+        f.write('model score: ' + score)
+        f.write('--------------------------------------')
+
+    """ confusion matrix 
     valid_generator.reset()
     ground_truth = valid_generator.classes
     print("ground_truth:", ground_truth)
@@ -113,6 +122,7 @@ def main(args, classes):
 
     cm = confusion_matrix(ground_truth, predicted_classes)
     print(cm)
+    """
 
 
 if __name__ == "__main__":
