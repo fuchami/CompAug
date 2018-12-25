@@ -34,25 +34,26 @@ def tinycnn_model(input_shape, classes):
 def cnn_fullmodel(input_shape, classes):
 
     model = Sequential()
-    model.add(Conv2D(32, (3,3), padding='same', activation='relu', input_shape=input_shape))
+    model.add(Conv2D(32, (3,3), padding='same', input_shape=input_shape))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2,2)))
     
-    model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
-    model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv2D(64, (3,3), padding='same'))
+    model.add(Conv2D(64, (3,3), padding='same'))
     model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
 
-    model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
-    model.add(Conv2D(256, (3,3), activation='relu', padding='same'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv2D(128, (3,3), padding='same'))
+    model.add(Conv2D(256, (3,3), padding='same'))
     model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2,2)))
 
     model.add(GlobalAveragePooling2D())
-    model.add(Dense(1028))
+    model.add(Dense(512))
     model.add(Activation('relu'))
     model.add(Dropout(0.25))
 
-    model.add(Dense(256))
+    model.add(Dense(64))
     model.add(Activation('relu'))
     model.add(Dropout(0.25))
 

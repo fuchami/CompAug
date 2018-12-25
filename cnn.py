@@ -19,14 +19,13 @@ import load
 def main(args, classes):
 
     """ log params  """
-    para_str = 'model_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_SGD'.format(
-        args.model, args.aug_mode, args.epochs, args.imgsize, args.batchsize)
+    para_str = 'model_{}_transize_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
+        args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
+    print("start this params CNN train: ", para_str)
 
     """ define callback """
     if not os.path.exists('./model_images/'):
         os.makedirs('./model_images/')
-    if not os.path.exists('./csv_log/'):
-        os.makedirs('./csv_log/')
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
 
@@ -36,7 +35,7 @@ def main(args, classes):
 
 
     """ load image using image data generator """
-    if args.aug_mode == 'None':
+    if args.aug_mode == 'non':
         print("-- load image generator with non augmentation --")
         train_generator, valid_generator = load.nonAugmentGenerator(args, classes)
     elif args.aug_mode == 'aug':
@@ -67,7 +66,7 @@ def main(args, classes):
     
     """ select optimizer """
     if args.opt == 'SGD':
-        opt = SGD(lr=1e-4, momentum=0.9)
+        opt = SGD(lr=0.01, momentum=0.9, decay=1e-6, nesterov=True)
         print("-- optimizer: SGD --")
     elif args.opt == 'Adam':
         opt = Adam()
@@ -99,17 +98,15 @@ def main(args, classes):
     """ evaluate model """
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
-    score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
-    print("model score: ",score)
-    score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
-    print("model score: ",score)
 
     """ 学習結果をテキスト出力 """
     with open('./train_log/log.txt', 'a') as f:
-        f.write('--------------------------------------')
-        f.write(para_str)
-        f.write('model score: ' + score)
-        f.write('--------------------------------------')
+        f.write('-------------------------------------------------------\n')
+        f.write(para_str+'\n')
+        acc = 'validation acc: ' + str(score[1])
+        f.write(acc+'\n')
+        f.write('-------------------------------------------------------\n')
+        f.write('\n\n')
 
     """ confusion matrix 
     valid_generator.reset()
@@ -129,14 +126,15 @@ if __name__ == "__main__":
     print ("classes: ", len(classes))
 
     parser = argparse.ArgumentParser(description='train CNN model for classify')
-    parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/train_full/')
+    parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
+    parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
-    parser.add_argument('--epochs', '-e', type=int, default=50)
+    parser.add_argument('--epochs', '-e', type=int, default=100)
     parser.add_argument('--imgsize', '-s', type=int, default=128)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
-    parser.add_argument('--aug_mode', '-a', default='aug',
-                        help='None: Non Augmenration, aug: simpleAugmentation, mixup')
+    parser.add_argument('--aug_mode', '-a', default='non',
+                        help='non: Non Augmenration, aug: simpleAugmentation, mixup')
     # 学習させるモデルの選択
     parser.add_argument('--model', '-m', default="v3",
                         help='tiny, full, v3')
