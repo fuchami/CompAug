@@ -21,3 +21,15 @@ validation acc: 0.9200000013245476----------------------------------------------
 model_v3_transize_tiny_Dtype_aug_Epoch100_imgsize128_Batchsize16_AMSGrad
 validation acc: 0.8600000007152557-------------------------------------------------------
 
+-------------------------------------------------------
+model_full_transize_tiny_Dtype_aug_Epoch100_imgsize128_Batchsize16_AMSGrad
+validation acc: 0.5266666665342119
+-------------------------------------------------------
+
+
+-------------------------------------------------------
+model_full_transize_full_Dtype_aug_Epoch100_imgsize128_Batchsize16_AMSGrad
+validation acc: 0.5333333338366615
+-------------------------------------------------------
+
+

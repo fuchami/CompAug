@@ -106,7 +106,7 @@ def main(args, classes):
         f.write('-------------------------------------------------------\n')
         f.write(para_str+'\n')
         acc = 'validation acc: ' + str(score[1])
-        f.write(acc '\n')
+        f.write(acc+'\n')
         f.write('-------------------------------------------------------\n')
         f.write('\n\n')
 
