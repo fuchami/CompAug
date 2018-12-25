@@ -30,7 +30,8 @@ def main(args, classes):
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
 
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=0.5, verbose=1, min_lr=1e-9)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    es_cb = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=1, mode='auto')
     csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
 
 
@@ -88,9 +89,9 @@ def main(args, classes):
         generator=train_generator,
         steps_per_epoch = train_generator.samples// train_generator.batch_size,
         nb_epoch = args.epochs,
-        callbacks=[csv_logger],
+        callbacks=[csv_logger, reduce_lr],
         validation_data = valid_generator,
-        validation_steps = valid_generator.samples // valid_generator.batch_size)
+        validation_steps = valid_generator.samples// args.batchsize)
     
     # 学習履歴をプロット
     tools.plot_history(history, para_str)
@@ -121,7 +122,6 @@ def main(args, classes):
     cm = confusion_matrix(ground_truth, predicted_classes)
     print(cm)
     """
-
 
 if __name__ == "__main__":
 

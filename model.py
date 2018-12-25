@@ -14,18 +14,15 @@ def tinycnn_model(input_shape, classes):
     model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
     model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    # model.add(BatchNormalization())
 
     model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
     model.add(Conv2D(256, (3,3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    # model.add(BatchNormalization())
 
     model.add(Flatten())
-    # model.add(GlobalAveragePooling2D())
     model.add(Dense(256))
     model.add(Activation('relu'))
-    # model.add(Dropout(0.25))
+    model.add(Dropout(0.25))
 
     model.add(Dense(classes))
     model.add(Activation('softmax'))
