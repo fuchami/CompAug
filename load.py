@@ -83,7 +83,7 @@ class MyImageDataGenerator(ImageDataGenerator):
                 height_shift_range=0.0, brightness_range=None, shear_range=0.0, zoom_range=0.0,
                 channel_shift_range=0.0, fill_mode='nearest', cval=0.0, horizontal_flip=False,
                 vertical_flip=False, rescale=None, preprocessing_function=None, data_format=None, 
-                validation_split=0.0, random_crop=None, mix_up_alpha=0.0):
+                validation_split=0.0, random_crop=None, mix_up_alpha=0.0, random_erasing=False):
 
         # 親クラスのコンストラクタ
         super().__init__(featurewise_center, samplewise_center, featurewise_std_normalization,
@@ -96,6 +96,8 @@ class MyImageDataGenerator(ImageDataGenerator):
         self.mix_up_alpha = mix_up_alpha
         assert random_crop == None or len(random_crop) == 2
         self.random_crop_size = random_crop
+
+        self.random_erasing = random_erasing
 
     """ Random Crop """
     def random_crop(self, original_img):
@@ -120,6 +122,43 @@ class MyImageDataGenerator(ImageDataGenerator):
         X = x1 * x_l + x2 * (1- x_l)
         Y = y1 * y_l + y2 * (1- y_l)
         return X, Y
+    
+    """ Random Erasing 
+    https://www.kumilog.net/entry/numpy-data-augmentation
+    """
+    def random_eraser(self, original_img):
+        image = np.copy(original_img)
+        p=0.5
+        s=(0.02, 0.4)
+        r=(0.3, 3)
+
+        # マスクする画素値をランダムで決める
+        mask_value = np.random.random()
+
+        h, w, _ = image.shape
+        # マスクサイズを元画像のs(0.02~0.4)倍の範囲からランダムに決める
+        mask_area = np.random.randint(h * w * s[0], h* w * s[1])
+
+        # マスクのアスペクト比をr(0.3~3)の範囲からランダムに決める
+        mask_aspect_ratio = np.random.rand() * r[1] + r[0]
+        
+        # マスクのサイズとアスペクト比からマスクの高さと幅を決める
+        # 算出した高さと幅(のどちらか)が元画像より大きくなることがあるので修正
+        mask_height = int(np.sqrt(mask_area / mask_aspect_ratio))
+        if mask_height > h-1:
+            mask_height = h-1
+        mask_width = int(mask_aspect_ratio * mask_height)
+        if mask_width > w-1:
+            mask_width = w-1
+        
+        top = np.random.randint(0, h-mask_height)
+        left = np.random.randint(0, w-mask_width)
+        bottom = top+mask_height
+        right = left+mask_width
+
+        image[top:bottom, left:right, :].fill(mask_value)
+
+        return image
     
     """ バッチサイズごとに画像を読み込んで返す """
     def flow_from_directory(self, directory, target_size=(256, 256), color_mode='rgb',
@@ -150,6 +189,13 @@ class MyImageDataGenerator(ImageDataGenerator):
                 x = np.zeros((batch_x.shape[0], self.random_crop_size[0], self.random_crop_size[1], 3))
                 for i in range(batch_x.shape[0]):
                     x[i] = self.random_crop(batch_x[i])
+                batch_x = x
+            
+            """ random erasing """
+            if self.random_erasing == True:
+                x = np.zeros((batch_x.shape[0], batch_x.shape[1], batch_x.shape[2], 3))
+                for i in range(batch_x.shape[0]):
+                    x[i] = self.random_eraser(batch_x[i])
                 batch_x = x
             
             yield(batch_x, batch_y)

@@ -23,9 +23,13 @@ def show_img(imgs, row, col):
 
 if __name__ == "__main__":
     classes = ['bisco','clearclean', 'frisk', 'toothbrush', 'udon']
+    """
     datagen = load.MyImageDataGenerator(
                         rescale=1/255.0,
                         mix_up_alpha=4)
+    """
+    datagen = load.MyImageDataGenerator(rescale=1/255.0,
+        random_erasing=True)
     
     max_img_num = 12
     imgs = []
