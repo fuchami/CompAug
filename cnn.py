@@ -33,7 +33,6 @@ def main(args, classes):
 
     callbacks = []
     callbacks.append(csv_logger)
-    callbacks.append(es_cb)
 
     """ load image using image data generator """
     if args.aug_mode == 'non':
