@@ -172,6 +172,13 @@ class MyImageDataGenerator(ImageDataGenerator):
         # 拡張処理
         while True:
             batch_x, batch_y = next(batches)
+            """ random crop """
+            if self.random_crop_size != None:
+                x = np.zeros((batch_x.shape[0], self.random_crop_size[0], self.random_crop_size[1], 3))
+                for i in range(batch_x.shape[0]):
+                    x[i] = self.random_crop(batch_x[i])
+                batch_x = x
+
             """ mix up """
             if self.mix_up_alpha > 0:
                 while True:
@@ -184,13 +191,7 @@ class MyImageDataGenerator(ImageDataGenerator):
                     elif m1 == m2:
                         break
                 batch_x, batch_y = self.mix_up(batch_x, batch_y, batch_x_2, batch_y_2)
-            """ random crop """
-            if self.random_crop_size != None:
-                x = np.zeros((batch_x.shape[0], self.random_crop_size[0], self.random_crop_size[1], 3))
-                for i in range(batch_x.shape[0]):
-                    x[i] = self.random_crop(batch_x[i])
-                batch_x = x
-            
+
             """ random erasing """
             if self.random_erasing == True:
                 x = np.zeros((batch_x.shape[0], batch_x.shape[1], batch_x.shape[2], 3))
@@ -199,6 +200,3 @@ class MyImageDataGenerator(ImageDataGenerator):
                 batch_x = x
             
             yield(batch_x, batch_y)
-
-
-        

@@ -12,14 +12,12 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.datasets import cifar10
 from sklearn.metrics import confusion_matrix, classification_report
 
-import model
-import tools
-import load
+import model, load, tools
 
 def main(args, classes):
 
     """ log params  """
-    para_str = 'model_{}_transize_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
+    para_str = 'model_{}_trainsize_{}_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
         args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
 
@@ -30,9 +28,12 @@ def main(args, classes):
         os.makedirs('./train_log/' + para_str + '/')
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
-    es_cb = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
+    es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
+    csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
 
+    callbacks = []
+    callbacks.append(csv_logger)
+    callbacks.append(es_cb)
 
     """ load image using image data generator """
     if args.aug_mode == 'non':
@@ -48,7 +49,7 @@ def main(args, classes):
 
     print("train generator samples: ", train_generator.samples)
     print("valid generator samples: ", valid_generator.samples)
-    print(train_generator.class_indices)
+    # print(train_generator.class_indices)
     
 
     """ build cnn model """
@@ -88,7 +89,7 @@ def main(args, classes):
         generator=train_generator,
         steps_per_epoch = train_generator.samples// train_generator.batch_size,
         nb_epoch = args.epochs,
-        callbacks=[csv_logger, reduce_lr],
+        callbacks = callbacks,
         validation_data = valid_generator,
         validation_steps = valid_generator.samples// args.batchsize)
     
@@ -108,18 +109,6 @@ def main(args, classes):
         f.write('-------------------------------------------------------\n')
         f.write('\n\n')
 
-    """ confusion matrix 
-    valid_generator.reset()
-    ground_truth = valid_generator.classes
-    print("ground_truth:", ground_truth)
-    predictions = cnn_model.predict_generator(valid_generator, verbose=1, steps=valid_generator.samples//30)
-    predicted_classes = np.argmax(predictions, axis=1)
-    print("predicted_classes: ", predicted_classes)
-
-    cm = confusion_matrix(ground_truth, predicted_classes)
-    print(cm)
-    """
-
 if __name__ == "__main__":
 
     classes = ['bisco','clearclean', 'frisk', 'toothbrush', 'udon']
@@ -129,17 +118,17 @@ if __name__ == "__main__":
     parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
     parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
-    parser.add_argument('--epochs', '-e', type=int, default=100)
+    parser.add_argument('--epochs', '-e', type=int, default=80)
     parser.add_argument('--imgsize', '-s', type=int, default=128)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='non: Non Augmenration, aug: simpleAugmentation, mixup')
     # 学習させるモデルの選択
-    parser.add_argument('--model', '-m', default="v3",
+    parser.add_argument('--model', '-m', default='tiny',
                         help='tiny, full, v3')
     # 最適化関数
-    parser.add_argument('--opt', '-o', default="Adam",
+    parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')
 
     args = parser.parse_args()
