@@ -50,13 +50,14 @@ def main(args, classes):
     print("valid generator samples: ", valid_generator.samples)
     # print(train_generator.class_indices)
     
-
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
     # cnn_model = model.tinycnn_model(input_shape, len(classes))
     """ select load model """
     if args.model == 'tiny':
         cnn_model = model.tinycnn_model(input_shape, len(classes))
+    if args.model == 'mlp':
+        cnn_model = model.mlp(input_shape, len(classes))
     elif args.model == 'full':
         cnn_model = model.cnn_fullmodel(input_shape, len(classes))
     elif args.model == 'v3':
@@ -77,7 +78,7 @@ def main(args, classes):
     else:
         raise SyntaxError("please select optimizer: 'SGD' or 'Adam' or 'AMSGrad'. ")
 
-    plot_model(cnn_model, to_file='./model_images/tinycnn.png', show_shapes=True)
+    plot_model(cnn_model, to_file='./model_images/' +str(args.model)+  'model.png', show_shapes=True)
 
     cnn_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
@@ -90,7 +91,7 @@ def main(args, classes):
         nb_epoch = args.epochs,
         callbacks = callbacks,
         validation_data = valid_generator,
-        validation_steps = valid_generator.samples// args.batchsize)
+        validation_steps = valid_generator.samples)
     
     # 学習履歴をプロット
     tools.plot_history(history, para_str)
@@ -118,14 +119,14 @@ if __name__ == "__main__":
     parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=80)
-    parser.add_argument('--imgsize', '-s', type=int, default=128)
+    parser.add_argument('--imgsize', '-s', type=int, default=64)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='non: Non Augmenration, aug: simpleAugmentation, mixup')
     # 学習させるモデルの選択
     parser.add_argument('--model', '-m', default='tiny',
-                        help='tiny, full, v3')
+                        help='mlp, tiny, full, v3')
     # 最適化関数
     parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')

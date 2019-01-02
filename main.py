@@ -12,7 +12,7 @@ def main():
         for t in train_data:
             for a in aug_model:
                 for o in optimizers:
-                    cmd = ["python3",'cnn.py', "-m", m , "-t", t, "-a", a, "-o", o]
+                    cmd = ["python",'cnn.py', "-m", m , "-t", t, "-a", a, "-o", o ]
                     print(cmd)
                     result = subprocess.check_output(cmd)
                     print(result)

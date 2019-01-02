@@ -21,8 +21,8 @@ def nonAugmentGenerator(args, classes):
     else:
         raise SyntaxError("please select optimizer: 'full' or 'half' or 'tiny'. ")
 
-    train_datagen = ImageDataGenerator()
-    valid_datagen = ImageDataGenerator()
+    train_datagen = ImageDataGenerator(rescale=1.0 / 255)
+    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
 
     train_generator = train_datagen.flow_from_directory(
         trainpath,

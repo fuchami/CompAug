@@ -4,6 +4,26 @@ from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
 from keras.applications.inception_v3 import InceptionV3
 
+# multi layer perceptron
+def mlp(input_shape, classes):
+    Input_shape = input_shape[0] * input_shape[1] * input_shape[2]
+
+    model = Sequential()
+    model.add(Dense(1024, activation='relu', input_shape=(Input_shape,)))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(classes))
+    model.add(Activation('softmax'))
+
+    model.summary()
+    return model
+
 # 小さな畳み込みニューラルネットワーク
 def tinycnn_model(input_shape, classes):
 
@@ -34,27 +54,24 @@ def tinycnn_model(input_shape, classes):
 def cnn_fullmodel(input_shape, classes):
 
     model = Sequential()
-    model.add(Conv2D(32, (3,3), padding='same', input_shape=input_shape))
+    model.add(Conv2D(64, (3,3), padding='same', input_shape=input_shape))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     
-    model.add(Conv2D(64, (3,3), padding='same'))
-    model.add(Conv2D(64, (3,3), padding='same'))
+    model.add(Conv2D(128, (3,3), padding='same'))
+    model.add(Conv2D(128, (3,3), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
 
-    model.add(Conv2D(128, (3,3), padding='same'))
+    model.add(Conv2D(256, (3,3), padding='same'))
     model.add(Conv2D(256, (3,3), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
 
     model.add(GlobalAveragePooling2D())
-    model.add(Dense(512))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.25))
 
     model.add(Dense(64))
     model.add(Activation('relu'))
