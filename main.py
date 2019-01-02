@@ -3,9 +3,9 @@ import os,sys
 import subprocess
 
 def main():
-    cnn_model = ['tiny', 'full', 'v3']
+    cnn_model = ['mlp', 'tiny', 'full', 'v3']
     train_data = ['full', 'half', 'tiny']
-    aug_model = ['non', 'aug']
+    aug_model = ['non', 'aug', 'mixup', 'erasing', 'full']
     optimizers = ['SGD', 'Adam', 'AMSGrad']
 
     for m in cnn_model:

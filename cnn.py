@@ -7,7 +7,7 @@ import numpy as np
 import keras
 from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
-from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
+from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger, LearningRateScheduler
 from keras.preprocessing.image import ImageDataGenerator
 from keras.datasets import cifar10
 from sklearn.metrics import confusion_matrix, classification_report
@@ -27,24 +27,20 @@ def main(args, classes):
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
 
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    base_lr = 1e-3  # adamとかならこのくらい。SGDなら例えば 0.1 * batch_size / 128 とかくらい。
+    lr_decay_rate = 1 / 3
+    lr_steps = 4
+    reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)))
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
     csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
 
     callbacks = []
     callbacks.append(csv_logger)
+    callbacks.append(reduce_lr)
 
     """ load image using image data generator """
-    if args.aug_mode == 'non':
-        print("-- load image generator with non augmentation --")
-        train_generator, valid_generator = load.nonAugmentGenerator(args, classes)
-    elif args.aug_mode == 'aug':
-        print("-- load image generator with augmentation --")
-        train_generator, valid_generator = load.AugmentGenerator(args, classes)
-    elif args.aug_mode =='mixup':
-        print("-- load image generator with mixup --")
-    else:
-        raise SyntaxError("please select ImageDataGenerator : 'None' or 'aug' or 'mixup'. ")
+    train_generator, valid_generator = load.AugmentGenerator(args, classes)
 
     print("train generator samples: ", train_generator.samples)
     print("valid generator samples: ", valid_generator.samples)
@@ -67,7 +63,7 @@ def main(args, classes):
     
     """ select optimizer """
     if args.opt == 'SGD':
-        opt = SGD(lr=0.01, momentum=0.9, decay=1e-6, nesterov=True)
+        opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         print("-- optimizer: SGD --")
     elif args.opt == 'Adam':
         opt = Adam()
@@ -97,6 +93,7 @@ def main(args, classes):
     tools.plot_history(history, para_str)
 
     """ evaluate model """
+    valid_generator.reset()
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
 
@@ -123,7 +120,7 @@ if __name__ == "__main__":
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
-                        help='non: Non Augmenration, aug: simpleAugmentation, mixup')
+                        help='non, aug, mixup, erasing, full)
     # 学習させるモデルの選択
     parser.add_argument('--model', '-m', default='tiny',
                         help='mlp, tiny, full, v3')
