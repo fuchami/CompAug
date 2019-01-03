@@ -2,7 +2,6 @@
 """
 継承して独自のジェネレーターを作成
 https://qiita.com/koshian2/items/909360f50e3dd5922f32
-
 mix-upやRandom Erasingを行う
 
 """
@@ -23,13 +22,14 @@ def AugmentGenerator(args, classes):
 
     if args.aug_mode == 'non':
         print('-- load image data generator with non augmentation --')
-        train_datagen = ImageDataGenerator(rescale=1.0 / 255)
+        train_datagen = ImageDataGenerator(rescale=1.0/255)
     elif args.aug_mode == 'aug':
         print('-- load image data generator with augmentation --')
-        train_datagen = ImageDataGenerator(rescale=1.0 / 255,
+        train_datagen = ImageDataGenerator(rescale=1.0/255,
                                             shear_range=0.2,
                                             zoom_range=0.2,
-                                            horizontal_flip=True)
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1)
     elif args.aug_mode == 'mixup':
         print('-- load image data generator with mixup --')
         train_datagen = MyImageDataGenerator(rescale=1.0/255,
@@ -38,12 +38,13 @@ def AugmentGenerator(args, classes):
         print('-- load image data generator with random erasing --')
         train_datagen = MyImageDataGenerator(rescale=1.0/255,
                                             random_erasing=True)
-    elif args.aug_mode == 'full':
+    elif args.aug_mode == 'fullaug':
         print('-- load image data generator with FULL AUGMENTATION ! --')
-        train_datagen = MyImageDataGenerator(rescale=1.0 / 255,
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
                                             shear_range=0.2,
                                             zoom_range=0.2,
-                                            horizontal_flip=True,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1,
                                             mix_up_alpha=0.2,
                                             random_erasing=True)
     else:
@@ -125,6 +126,10 @@ class MyImageDataGenerator(ImageDataGenerator):
         p=0.5
         s=(0.02, 0.4)
         r=(0.3, 3)
+
+        # マスクするかしないか
+        if np.random.rand() > p:
+            return image
 
         # マスクする画素値をランダムで決める
         mask_value = np.random.random()

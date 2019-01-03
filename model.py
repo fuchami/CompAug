@@ -9,7 +9,7 @@ def mlp(input_shape, classes):
     Input_shape = input_shape[0] * input_shape[1] * input_shape[2]
 
     model = Sequential()
-    model.add(Dense(1024, activation='relu', input_shape=(Input_shape,)))
+    model.add(Dense(1024, activation='relu', input_shape=(input_shape)))
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
     model.add(Dense(512))

@@ -1,6 +1,6 @@
 # coding:utf-8
 
-import os,sys, argparse
+import os,sys,argparse,csv
 import h5py
 
 import numpy as np
@@ -26,12 +26,17 @@ def main(args, classes):
         os.makedirs('./model_images/')
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
+    if not os.path.exists('./train_log/log.csv'):
+        with open('./train_log/log.csv', 'w')as f:
+            writer = csv.writer(f)
+            header = ['model', 'traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
+            writer.writerow(header)
 
     # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
     base_lr = 1e-3  # adamとかならこのくらい。SGDなら例えば 0.1 * batch_size / 128 とかくらい。
     lr_decay_rate = 1 / 3
     lr_steps = 4
-    reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)))
+    reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
     csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
 
@@ -42,18 +47,15 @@ def main(args, classes):
     """ load image using image data generator """
     train_generator, valid_generator = load.AugmentGenerator(args, classes)
 
-    print("train generator samples: ", train_generator.samples)
-    print("valid generator samples: ", valid_generator.samples)
+    # print("train generator samples: ", train_generator.samples)
+    # print("valid generator samples: ", valid_generator.samples)
     # print(train_generator.class_indices)
     
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
-    # cnn_model = model.tinycnn_model(input_shape, len(classes))
     """ select load model """
     if args.model == 'tiny':
         cnn_model = model.tinycnn_model(input_shape, len(classes))
-    if args.model == 'mlp':
-        cnn_model = model.mlp(input_shape, len(classes))
     elif args.model == 'full':
         cnn_model = model.cnn_fullmodel(input_shape, len(classes))
     elif args.model == 'v3':
@@ -83,7 +85,7 @@ def main(args, classes):
     """ train model """
     history = cnn_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch = train_generator.samples// train_generator.batch_size,
+        steps_per_epoch = 600 // args.batchsize,
         nb_epoch = args.epochs,
         callbacks = callbacks,
         validation_data = valid_generator,
@@ -97,14 +99,11 @@ def main(args, classes):
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
 
-    """ 学習結果をテキスト出力 """
-    with open('./train_log/log.txt', 'a') as f:
-        f.write('-------------------------------------------------------\n')
-        f.write(para_str+'\n')
-        acc = 'validation acc: ' + str(score[1])
-        f.write(acc+'\n')
-        f.write('-------------------------------------------------------\n')
-        f.write('\n\n')
+    """ 学習結果をCSV出力 """
+    with open('./train_log/log.csv', 'a') as f:
+        data = [args.model, args.trainsize, args.aug_mode, args.opt, score[1], score[0]]
+        writer = csv.writer(f)
+        writer.writerow(data)
 
 if __name__ == "__main__":
 
@@ -116,11 +115,11 @@ if __name__ == "__main__":
     parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=80)
-    parser.add_argument('--imgsize', '-s', type=int, default=64)
+    parser.add_argument('--imgsize', '-s', type=int, default=128)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
-                        help='non, aug, mixup, erasing, full)
+                        help='non, aug, mixup, erasing, fullaug')
     # 学習させるモデルの選択
     parser.add_argument('--model', '-m', default='tiny',
                         help='mlp, tiny, full, v3')
