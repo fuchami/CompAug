@@ -1,21 +1,19 @@
 # coding:utf-8
 
-import os,sys, argparse
+import os,sys,argparse,csv
 import h5py
 
 import numpy as np
 import keras
 from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
-from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
+from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger, LearningRateScheduler
 from keras.preprocessing.image import ImageDataGenerator
 from keras.metrics import categorical_accuracy
 from keras.datasets import cifar10
 from sklearn.metrics import confusion_matrix, classification_report
 
-import model
-import tools
-import load
+import model, load, tools
 
 def main(args, classes):
 
@@ -29,32 +27,33 @@ def main(args, classes):
         os.makedirs('./model_images/')
     if not os.path.exists('./train_log/' + para_str + '/'):
         os.makedirs('./train_log/' + para_str + '/')
+    if not os.path.exists('./train_log/log.csv'):
+        with open('./train_log/log.csv', 'w')as f:
+            writer = csv.writer(f)
+            header = ['model', 'traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
+            writer.writerow(header)
 
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
-    es_cb = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./train_log/' + para_str + '/log.csv', separator=',')
+    # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    base_lr = 1e-3  # adamとかならこのくらい。SGDなら例えば 0.1 * batch_size / 128 とかくらい。
+    lr_decay_rate = 1 / 3
+    lr_steps = 4
+    reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
+    es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
+    csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
 
+    callbacks = []
+    callbacks.append(csv_logger)
+    callbacks.append(reduce_lr)
 
     """ load image using image data generator """
-    if args.aug_mode == 'non':
-        print("-- load image generator with non augmentation --")
-        train_generator, valid_generator = load.nonAugmentGenerator(args, classes)
-    elif args.aug_mode == 'aug':
-        print("-- load image generator with augmentation --")
-        train_generator, valid_generator = load.AugmentGenerator(args, classes)
-    elif args.aug_mode =='mixup':
-        print("-- load image generator with mixup --")
-    else:
-        raise SyntaxError("please select ImageDataGenerator : 'None' or 'aug' or 'mixup'. ")
+    train_generator, valid_generator = load.AugmentGenerator(args, classes)
 
-    print("train generator samples: ", train_generator.samples)
-    print("valid generator samples: ", valid_generator.samples)
-    print(train_generator.class_indices)
+    # print("train generator samples: ", train_generator.samples)
+    # print("valid generator samples: ", valid_generator.samples)
+    # print(train_generator.class_indices)
     
-
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
-    # cnn_model = model.tinycnn_model(input_shape, len(classes))
     """ select load model """
     if args.model == 'tiny':
         cnn_model = model.tinycnn_model(input_shape, len(classes))
@@ -67,7 +66,7 @@ def main(args, classes):
     
     """ select optimizer """
     if args.opt == 'SGD':
-        opt = SGD(lr=0.01, momentum=0.9, decay=1e-6, nesterov=True)
+        opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         print("-- optimizer: SGD --")
     elif args.opt == 'Adam':
         opt = Adam()
@@ -78,7 +77,7 @@ def main(args, classes):
     else:
         raise SyntaxError("please select optimizer: 'SGD' or 'Adam' or 'AMSGrad'. ")
 
-    plot_model(cnn_model, to_file='./model_images/tinycnn.png', show_shapes=True)
+    plot_model(cnn_model, to_file='./model_images/' +str(args.model)+  'model.png', show_shapes=True)
 
     cnn_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
@@ -87,9 +86,9 @@ def main(args, classes):
     """ train model """
     history = cnn_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch = train_generator.samples// train_generator.batch_size,
+        steps_per_epoch = 600 // args.batchsize,
         nb_epoch = args.epochs,
-        callbacks=[csv_logger, reduce_lr],
+        callbacks = callbacks,
         validation_data = valid_generator,
         validation_steps = valid_generator.samples)
     
@@ -97,29 +96,15 @@ def main(args, classes):
     tools.plot_history(history, para_str)
 
     """ evaluate model """
+    valid_generator.reset()
     score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
     print("model score: ",score)
 
-    """ 学習結果をテキスト出力 """
-    with open('./train_log/log.txt', 'a') as f:
-        f.write('-------------------------------------------------------\n')
-        f.write(para_str+'\n')
-        acc = 'validation acc: ' + str(score[1])
-        f.write(acc+'\n')
-        f.write('-------------------------------------------------------\n')
-        f.write('\n\n')
-
-    """ confusion matrix 
-    valid_generator.reset()
-    ground_truth = valid_generator.classes
-    print("ground_truth:", ground_truth)
-    predictions = cnn_model.predict_generator(valid_generator, verbose=1, steps=valid_generator.samples//30)
-    predicted_classes = np.argmax(predictions, axis=1)
-    print("predicted_classes: ", predicted_classes)
-
-    cm = confusion_matrix(ground_truth, predicted_classes)
-    print(cm)
-    """
+    """ 学習結果をCSV出力 """
+    with open('./train_log/log.csv', 'a') as f:
+        data = [args.model, args.trainsize, args.aug_mode, args.opt, score[1], score[0]]
+        writer = csv.writer(f)
+        writer.writerow(data)
 
 if __name__ == "__main__":
 
@@ -135,12 +120,12 @@ if __name__ == "__main__":
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
-                        help='non: Non Augmenration, aug: simpleAugmentation, mixup')
+                        help='non, aug, mixup, erasing, fullaug')
     # 学習させるモデルの選択
-    parser.add_argument('--model', '-m', default="v3",
-                        help='tiny, full, v3')
+    parser.add_argument('--model', '-m', default='tiny',
+                        help='mlp, tiny, full, v3')
     # 最適化関数
-    parser.add_argument('--opt', '-o', default="Adam",
+    parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')
 
     args = parser.parse_args()
