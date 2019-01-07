@@ -18,7 +18,7 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('accuracy')
     plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.savefig('./train_log/' + parastr +  '/accuracy.png')
+    plt.savefig('./cifar10_train_log/' + parastr +  '/accuracy.png')
     plt.close()
 
     # lossの履歴をプロット
@@ -28,7 +28,7 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('loss')
     plt.legend(['loss', 'val_loss'], loc='lower right')
-    plt.savefig('./train_log/' + parastr +'/loss.png')
+    plt.savefig('./cifar10_train_log/' + parastr +'/loss.png')
     plt.close()
 
  # 混同行列のヒートマップをプロット

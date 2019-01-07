@@ -30,8 +30,8 @@ def AugmentGenerator(args, classes):
         train_datagen = ImageDataGenerator(rescale=1.0/255,
                                             shear_range=0.2,
                                             zoom_range=0.2,
-                                            width_shift_range=0.1,
-                                            height_shift_range=0.1)
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2)
     elif args.aug_mode == 'mixup':
         print('-- load image data generator with mixup --')
         train_datagen = MyImageDataGenerator(rescale=1.0/255,
@@ -45,8 +45,8 @@ def AugmentGenerator(args, classes):
         train_datagen = MyImageDataGenerator(rescale=1.0/255,
                                             shear_range=0.2,
                                             zoom_range=0.2,
-                                            width_shift_range=0.1,
-                                            height_shift_range=0.1,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2,
                                             mix_up_alpha=0.2,
                                             random_erasing=True)
     else:
@@ -202,6 +202,53 @@ class MyImageDataGenerator(ImageDataGenerator):
             
             yield(batch_x, batch_y)
 
+    def flow(self,
+            x,
+            y=None,
+            batch_size=32,
+            shuffle=True,
+            sample_weight=None,
+            seed=None,
+            save_to_dir=None,
+            save_prefix='',
+            save_format='png',
+            subset=None):
+        # 親クラスのflow
+        batches = super().flow(x,y,batch_size,shuffle,sample_weight,seed,save_to_dir,save_prefix,save_format,subset)
+
+        # 拡張処理
+        while True:
+            batch_x, batch_y = next(batches)
+            """ random crop """
+            if self.random_crop_size != None:
+                x = np.zeros((batch_x.shape[0], self.random_crop_size[0], self.random_crop_size[1], 3))
+                for i in range(batch_x.shape[0]):
+                    x[i] = self.random_crop(batch_x[i])
+                batch_x = x
+
+            """ mix up """
+            if self.mix_up_alpha > 0:
+                while True:
+                    batch_x_2, batch_y_2 = next(batches)
+                    m1, m2 = batch_x.shape[0], batch_x_2.shape[0]
+                    if m1 < m2:
+                        batch_x_2 = batch_x_2[:m1]
+                        batch_y_2 = batch_y_2[:m1]
+                        break
+                    elif m1 == m2:
+                        break
+                batch_x, batch_y = self.mix_up(batch_x, batch_y, batch_x_2, batch_y_2)
+
+            """ random erasing """
+            if self.random_erasing == True:
+                x = np.zeros((batch_x.shape[0], batch_x.shape[1], batch_x.shape[2], 3))
+                for i in range(batch_x.shape[0]):
+                    x[i] = self.random_eraser(batch_x[i])
+                batch_x = x
+            
+            yield(batch_x, batch_y)
+
+
 def cifar10Generator(args):
 
     (x_train, y_train),(x_test, y_test) = cifar10.load_data()
@@ -210,7 +257,7 @@ def cifar10Generator(args):
     x_test = x_test.astype('float32')/255
     print('x_train.shape: ', x_train.shape)
     print(x_train.shape[0], 'train samples')
-    print(x_train.shape[1], 'test samples')
+    print(x_test.shape[0], 'test samples')
     print('y_train shape: ', y_train.shape)
 
     # convert one-hot vector
@@ -224,20 +271,29 @@ def cifar10Generator(args):
         print('-- load image data generator with augmentation --')
         train_datagen = ImageDataGenerator(shear_range=0.2,
                                             zoom_range=0.2,
-                                            width_shift_range=0.1,
-                                            height_shift_range=0.1)
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2)
     elif args.aug_mode == 'mixup':
         print('-- load image data generator with mixup --')
-        train_datagen = MyImageDataGenerator(mix_up_alpha=0.2)
+        train_datagen = MyImageDataGenerator(mix_up_alpha=0.2,
+                                            shear_range=0.2,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2,
+                                            zoom_range=0.2)
     elif args.aug_mode == 'erasing':
         print('-- load image data generator with random erasing --')
-        train_datagen = MyImageDataGenerator(random_erasing=True)
+        train_datagen = MyImageDataGenerator(random_erasing=True,
+                                            shear_range=0.2,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2,
+                                            zoom_range=0.2)
+
     elif args.aug_mode == 'fullaug':
         print('-- load image data generator with FULL AUGMENTATION ! --')
         train_datagen = MyImageDataGenerator(shear_range=0.2,
                                             zoom_range=0.2,
-                                            width_shift_range=0.1,
-                                            height_shift_range=0.1,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2,
                                             mix_up_alpha=0.2,
                                             random_erasing=True)
     else:

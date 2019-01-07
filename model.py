@@ -54,30 +54,34 @@ def cnn_fullmodel(input_shape, classes):
     model.add(Conv2D(64, (3,3), padding='same', input_shape=input_shape))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(64, (3,3), strides=(2,2)))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
     
     model.add(Conv2D(128, (3,3), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(128, (3,3), padding='same'))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(128, (3,3), strides=(2,2)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.2))
 
     model.add(Conv2D(256, (3,3), padding='same'))
-    model.add(Activation('relu'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(256, (3,3), padding='same'))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(256, (3,3), strides=(2,2)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Dropout(0.2))
 
     model.add(GlobalAveragePooling2D())
-
-    model.add(Dense(128))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.3))
 
     model.add(Dense(classes))
     model.add(Activation('softmax'))

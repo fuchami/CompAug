@@ -31,11 +31,13 @@ def main(args):
             header = ['model', 'traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
 
-    # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
+    """
     base_lr = 1e-3  # adamとかならこのくらい。SGDなら例えば 0.1 * batch_size / 128 とかくらい。
     lr_decay_rate = 1 / 3
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
+    """
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
     csv_logger = CSVLogger('./cifar10_train_log/' + para_str + '/' + 'cifar10_log.csv', separator=',')
 
@@ -106,7 +108,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train CNN model for classify')
     parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
-    parser.add_argument('--epochs', '-e', type=int, default=80)
+    parser.add_argument('--epochs', '-e', type=int, default=100)
     parser.add_argument('--imgsize', '-s', type=int, default=32)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
     # 水増しなし 水増しあり mixup を選択
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', '-m', default='tiny',
                         help='mlp, tiny, full, v3')
     # 最適化関数
-    parser.add_argument('--opt', '-o', default='SGD',
+    parser.add_argument('--opt', '-o', default='Adam',
                         help='SGD Adam AMSGrad ')
 
     args = parser.parse_args()
