@@ -2,31 +2,31 @@
 
 import os,sys,argparse,csv
 import h5py
-
 import numpy as np
+
 import keras
 from keras.optimizers import Adam,SGD
-from keras.utils import plot_model 
-from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger, LearningRateScheduler
+from keras.utils import plot_model
+from keras.callbacks import TensorBoard,EarlyStopping,ReduceLROnPlateau,CSVLogger,LearningRateScheduler
 from keras.preprocessing.image import ImageDataGenerator
-from sklearn.metrics import confusion_matrix, classification_report
+from keras.datasets import cifar10
 
 import model, load, tools
 
-def main(args, classes):
+def main(args):
 
     """ log params  """
-    para_str = 'model_{}_trainsize_{}_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
-        args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
+    para_str = 'cifar10model_{}_{}_Epoch{}_batchsize_{}_{}'.format(
+        args.model, args.aug_mode, args.epochs, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
 
     """ define callback """
     if not os.path.exists('./model_images/'):
         os.makedirs('./model_images/')
-    if not os.path.exists('./train_log/' + para_str + '/'):
-        os.makedirs('./train_log/' + para_str + '/')
-    if not os.path.exists('./train_log/log.csv'):
-        with open('./train_log/log.csv', 'w')as f:
+    if not os.path.exists('./cifar10_train_log/' + para_str + '/'):
+        os.makedirs('./cifar10_train_log/' + para_str + '/')
+    if not os.path.exists('./cifar10_train_log/log.csv'):
+        with open('./cifar10_train_log/cifar10_log.csv', 'w')as f:
             writer = csv.writer(f)
             header = ['model', 'traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
@@ -37,30 +37,27 @@ def main(args, classes):
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
+    csv_logger = CSVLogger('./cifar10_train_log/' + para_str + '/' + 'cifar10_log.csv', separator=',')
 
     callbacks = []
     callbacks.append(csv_logger)
     callbacks.append(reduce_lr)
 
-    """ load image using image data generator """
-    train_generator, valid_generator = load.AugmentGenerator(args, classes)
+    """ load cifar10 datasets"""
+    print("-- load cifar10 datasets --")
+    train_generator, x_train, y_train, x_test, y_test = load.cifar10Generator(args)
 
-    # print("train generator samples: ", train_generator.samples)
-    # print("valid generator samples: ", valid_generator.samples)
-    # print(train_generator.class_indices)
-    
     """ build cnn model """
     input_shape = (args.imgsize, args.imgsize, 3)
     """ select load model """
     if args.model == 'tiny':
-        cnn_model = model.tinycnn_model(input_shape, len(classes))
+        cnn_model = model.tinycnn_model(input_shape, 10)
     elif args.model == 'full':
-        cnn_model = model.cnn_fullmodel(input_shape, len(classes))
+        cnn_model = model.cnn_fullmodel(input_shape, 10)
     elif args.model == 'v3':
-        cnn_model = model.inceptionv3_finetune_model(input_shape, len(classes))
+        cnn_model = model.inceptionv3_finetune_model(input_shape, 10)
     elif args.model == 'mlp':
-        cnn_model = model.mlp(input_shape, len(classes))
+        cnn_model = model.mlp(input_shape, 10)
     else:
         raise SyntaxError("please select model : 'tiny' or 'full' or 'v3'. ")
     
@@ -77,47 +74,41 @@ def main(args, classes):
     else:
         raise SyntaxError("please select optimizer: 'SGD' or 'Adam' or 'AMSGrad'. ")
 
-    plot_model(cnn_model, to_file='./model_images/' +str(args.model)+  'model.png', show_shapes=True)
-
     cnn_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
                     metrics=['accuracy'])
 
     """ train model """
-    history = cnn_model.fit_generator(
-        generator=train_generator,
-        steps_per_epoch = 600 // args.batchsize,
-        nb_epoch = args.epochs,
-        callbacks = callbacks,
-        validation_data = valid_generator,
-        validation_steps = 1)
-    
+    history = cnn_model.fit_generator(train_generator.flow(x_train, y_train, batch_size=args.batchsize),
+                                    steps_per_epoch = x_train.shape[0] // args.batchsize,
+                                    validation_data = (x_test, y_test),
+                                    epochs = args.epochs,
+                                    callbacks = callbacks)
+
     # 学習履歴をプロット
     tools.plot_history(history, para_str)
 
     """ evaluate model """
-    valid_generator.reset()
-    score =cnn_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
+    score =cnn_model.evaluate(x_test, y_test, verbose=1)
     print("model score: ", score)
 
     """ 学習結果をCSV出力 """
-    with open('./train_log/log.csv', 'a') as f:
-        data = [args.model, args.trainsize, args.aug_mode, args.opt, score[1], score[0]]
+    with open('./cifar10_train_log/cifar10_log.csv', 'a') as f:
+        data = [args.model,args.aug_mode, args.opt, score[1], score[0]]
         writer = csv.writer(f)
         writer.writerow(data)
+    
+    return 
+
 
 if __name__ == "__main__":
 
-    classes = ['bisco','clearclean', 'frisk', 'toothbrush', 'udon']
-    print ("classes: ", len(classes))
-
     parser = argparse.ArgumentParser(description='train CNN model for classify')
     parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
-    parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=80)
-    parser.add_argument('--imgsize', '-s', type=int, default=128)
-    parser.add_argument('--batchsize', '-b', type=int, default=16)
+    parser.add_argument('--imgsize', '-s', type=int, default=32)
+    parser.add_argument('--batchsize', '-b', type=int, default=128)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='non, aug, mixup, erasing, fullaug')
@@ -130,4 +121,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args, classes)
+    main(args)

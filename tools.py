@@ -24,9 +24,9 @@ def plot_history(history, parastr):
     # lossの履歴をプロット
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
-    plt.title('model accuracy')
+    plt.title('model loss')
     plt.xlabel('epoch')
-    plt.xlabel('accuracy')
+    plt.xlabel('loss')
     plt.legend(['loss', 'val_loss'], loc='lower right')
     plt.savefig('./train_log/' + parastr +'/loss.png')
     plt.close()

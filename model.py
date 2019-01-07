@@ -6,21 +6,19 @@ from keras.applications.inception_v3 import InceptionV3
 
 # multi layer perceptron
 def mlp(input_shape, classes):
-    Input_shape = input_shape[0] * input_shape[1] * input_shape[2]
+    inputs = Input(input_shape,)
 
-    model = Sequential()
-    model.add(Dense(1024, activation='relu', input_shape=(input_shape)))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(512))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(512))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(classes))
-    model.add(Activation('softmax'))
+    x = Dense(1024, activation='relu')(inputs)
+    x = Dropout(0.3)(x)
+    x = Flatten()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(128, activation='relu')(x)
+    x = Dropout(0.3)(x)
 
+    outputs = Dense(classes, activation='softmax')(x)
+    model = Model(inputs=inputs, outputs=outputs)
+    
     model.summary()
     return model
 

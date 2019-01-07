@@ -7,7 +7,9 @@ mix-upやRandom Erasingを行う
 """
 
 import numpy as np
+import keras
 from keras.preprocessing.image import ImageDataGenerator
+from keras.datasets import cifar10
 
 # ジェネレーター
 def AugmentGenerator(args, classes):
@@ -199,3 +201,46 @@ class MyImageDataGenerator(ImageDataGenerator):
                 batch_x = x
             
             yield(batch_x, batch_y)
+
+def cifar10Generator(args):
+
+    (x_train, y_train),(x_test, y_test) = cifar10.load_data()
+    
+    x_train = x_train.astype('float32')/255
+    x_test = x_test.astype('float32')/255
+    print('x_train.shape: ', x_train.shape)
+    print(x_train.shape[0], 'train samples')
+    print(x_train.shape[1], 'test samples')
+    print('y_train shape: ', y_train.shape)
+
+    # convert one-hot vector
+    y_train = keras.utils.to_categorical(y_train, 10)
+    y_test = keras.utils.to_categorical(y_test, 10)
+
+    if args.aug_mode == 'non':
+        print('-- load image data generator with non augmentation --')
+        train_datagen = ImageDataGenerator()
+    elif args.aug_mode == 'aug':
+        print('-- load image data generator with augmentation --')
+        train_datagen = ImageDataGenerator(shear_range=0.2,
+                                            zoom_range=0.2,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1)
+    elif args.aug_mode == 'mixup':
+        print('-- load image data generator with mixup --')
+        train_datagen = MyImageDataGenerator(mix_up_alpha=0.2)
+    elif args.aug_mode == 'erasing':
+        print('-- load image data generator with random erasing --')
+        train_datagen = MyImageDataGenerator(random_erasing=True)
+    elif args.aug_mode == 'fullaug':
+        print('-- load image data generator with FULL AUGMENTATION ! --')
+        train_datagen = MyImageDataGenerator(shear_range=0.2,
+                                            zoom_range=0.2,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1,
+                                            mix_up_alpha=0.2,
+                                            random_erasing=True)
+    else:
+        raise SyntaxError("please select ImageDataGenerator: 'non' or 'aug' or 'mixup' or 'erasing' or 'full'. ")
+
+    return train_datagen, x_train, y_train, x_test, y_test
