@@ -36,7 +36,8 @@ def nonAugmentGenerator(args, classes):
         directory=args.validpath,
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
-        class_mode='categorical')
+        class_mode='categorical',
+        shuffle=True)
     
     return train_generator, valid_generator
 
@@ -54,6 +55,8 @@ def AugmentGenerator(args, classes):
     train_datagen = ImageDataGenerator(rescale=1.0 / 255,
                                         shear_range=0.2,
                                         zoom_range=0.2,
+                                        width_shift_range=0.2,
+                                        height_shift_range=0.2,
                                         horizontal_flip=True)
 
     valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
@@ -72,7 +75,8 @@ def AugmentGenerator(args, classes):
         target_size=(args.imgsize, args.imgsize),
         color_mode='rgb',
         classes=classes,
-        class_mode='categorical')
+        class_mode='categorical',
+        shuffle=True)
 
     return train_generator, valid_generator
 

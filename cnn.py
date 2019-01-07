@@ -9,6 +9,7 @@ from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.preprocessing.image import ImageDataGenerator
+from keras.metrics import categorical_accuracy
 from keras.datasets import cifar10
 from sklearn.metrics import confusion_matrix, classification_report
 
@@ -19,7 +20,7 @@ import load
 def main(args, classes):
 
     """ log params  """
-    para_str = 'model_{}_transize_{}_Dtype_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
+    para_str = 'model_{}_trainsize_{}_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
         args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
 
@@ -31,7 +32,7 @@ def main(args, classes):
 
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, min_lr=1e-9)
     es_cb = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./csv_log/' + para_str + '.csv', separator=',')
+    csv_logger = CSVLogger('./train_log/' + para_str + '/log.csv', separator=',')
 
 
     """ load image using image data generator """
@@ -81,7 +82,7 @@ def main(args, classes):
 
     cnn_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
-                    metrics=['accuracy'])
+                    metrics=[categorical_accuracy, 'accuracy'])
 
     """ train model """
     history = cnn_model.fit_generator(
@@ -90,7 +91,7 @@ def main(args, classes):
         nb_epoch = args.epochs,
         callbacks=[csv_logger, reduce_lr],
         validation_data = valid_generator,
-        validation_steps = valid_generator.samples// args.batchsize)
+        validation_steps = valid_generator.samples)
     
     # 学習履歴をプロット
     tools.plot_history(history, para_str)
@@ -129,7 +130,7 @@ if __name__ == "__main__":
     parser.add_argument('--trainpath', type=str, default='../DATASETS/compare_dataset/')
     parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
-    parser.add_argument('--epochs', '-e', type=int, default=100)
+    parser.add_argument('--epochs', '-e', type=int, default=80)
     parser.add_argument('--imgsize', '-s', type=int, default=128)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
