@@ -9,7 +9,8 @@ from keras.optimizers import Adam,SGD
 from keras.utils import plot_model 
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, CSVLogger, LearningRateScheduler
 from keras.preprocessing.image import ImageDataGenerator
-from sklearn.metrics import confusion_matrix, classification_report
+from keras.metrics import categorical_accuracy
+from keras.datasets import cifar10
 
 import model, load, tools
 
@@ -81,7 +82,7 @@ def main(args, classes):
 
     cnn_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
-                    metrics=['accuracy'])
+                    metrics=[categorical_accuracy, 'accuracy'])
 
     """ train model """
     history = cnn_model.fit_generator(
