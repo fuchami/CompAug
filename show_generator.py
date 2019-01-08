@@ -29,11 +29,17 @@ if __name__ == "__main__":
                         mix_up_alpha=4)
     """
     datagen = load.MyImageDataGenerator(rescale=1/255.0,
-        random_erasing=True)
+                                        shear_range=0.2,
+                                        zoom_range=0.5,
+                                        width_shift_range=0.3,
+                                        height_shift_range=0.2,
+                                        mix_up_alpha=0.2,
+                                        random_erasing=True)
+
     
     max_img_num = 12
     imgs = []
-    for d in datagen.flow_from_directory('../DATASETS/compare_dataset/train_full/',
+    for d in datagen.flow_from_directory('/Users/yuuki/Downloads/all/DogsCats/',
                                             batch_size=1, target_size=(128,128),
                                             class_mode='categorical',
                                             ):

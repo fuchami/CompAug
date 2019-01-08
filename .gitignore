@@ -1,6 +1,5 @@
 .DS_Store
 /csv_log/
-*.png
 *.jpg
 *.csv
 *.pyc

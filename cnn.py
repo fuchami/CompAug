@@ -20,12 +20,13 @@ def main(args, classes):
     para_str = 'model_{}_trainsize_{}_{}_Epoch{}_imgsize{}_Batchsize{}_{}'.format(
         args.model, args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
+    para_path = './train_log' + para_str
 
     """ define callback """
-    if not os.path.exists('./model_images/'):
-        os.makedirs('./model_images/')
-    if not os.path.exists('./train_log/' + para_str + '/'):
-        os.makedirs('./train_log/' + para_str + '/')
+    if not os.path.exists('./images/'):
+        os.makedirs('./images/')
+    if not os.path.exists( para_path + '/'):
+        os.makedirs( para_path + '/')
     if not os.path.exists('./train_log/log.csv'):
         with open('./train_log/log.csv', 'w')as f:
             writer = csv.writer(f)
@@ -38,7 +39,7 @@ def main(args, classes):
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./train_log/' + para_str + '/' + 'log.csv', separator=',')
+    csv_logger = CSVLogger( para_path + '/log.csv', separator=',')
 
     callbacks = []
     callbacks.append(csv_logger)
@@ -94,7 +95,7 @@ def main(args, classes):
         validation_steps = 1)
     
     # 学習履歴をプロット
-    tools.plot_history(history, para_str)
+    tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
     valid_generator.reset()

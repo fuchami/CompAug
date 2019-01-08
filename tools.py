@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sn
 from sklearn.metrics import confusion_matrix
 
-def plot_history(history, parastr):
+def plot_history(history, parastr, path):
 
     # 精度の履歴をプロット
     plt.plot(history.history['acc'])
@@ -18,7 +18,7 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('accuracy')
     plt.legend(['acc', 'val_acc'], loc='lower right')
-    plt.savefig('./cifar10_train_log/' + parastr +  '/accuracy.png')
+    plt.savefig( path + '/accuracy.png')
     plt.close()
 
     # lossの履歴をプロット
@@ -28,7 +28,7 @@ def plot_history(history, parastr):
     plt.xlabel('epoch')
     plt.xlabel('loss')
     plt.legend(['loss', 'val_loss'], loc='lower right')
-    plt.savefig('./cifar10_train_log/' + parastr +'/loss.png')
+    plt.savefig( path + '/loss.png')
     plt.close()
 
  # 混同行列のヒートマップをプロット

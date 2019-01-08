@@ -2,18 +2,22 @@
 
 少量のデータでなんとか学習を進める
 
-1. 学習モデルの比較
+1. 学習モデルの比較
 2. 最適化関数の比較
 3. DataAugmentationの比較
 
 # DataAugmentation
 ### simple data augmentation
+![](./images/augmentation.png)
 
 ### mixup
+![](./images/mixup.png)
 
 ### Random Erasing
+![](./images/random_erasing.png)
 
 ### all mixed augmentation
+![](./images/allmixed.png)
 
 # Usage
 
@@ -62,7 +66,7 @@ optional arguments:
 ```
 
 # show_generator.py
-ImageDataGeneratorを使って拡張した画像データを描画する
+ImageDataGeneratorを使って拡張した画像データを描画する
 
 # cnn.py
 CNNの学習を行う
@@ -88,5 +92,8 @@ optional arguments:
                         mlp, tiny, full, v3
   --opt OPT, -o OPT     SGD Adam AMSGrad
 ```
+
+# main.py
+様々なモデルでの学習を一気にする
 
 # Reference

@@ -19,13 +19,14 @@ def main(args):
     para_str = 'cifar10model_{}_{}_Epoch{}_batchsize_{}_{}'.format(
         args.model, args.aug_mode, args.epochs, args.batchsize, args.opt)
     print("start this params CNN train: ", para_str)
+    para_path = './cifar10_train_log/' + para_str 
 
     """ define callback """
-    if not os.path.exists('./model_images/'):
-        os.makedirs('./model_images/')
-    if not os.path.exists('./cifar10_train_log/' + para_str + '/'):
-        os.makedirs('./cifar10_train_log/' + para_str + '/')
-    if not os.path.exists('./cifar10_train_log/log.csv'):
+    if not os.path.exists('./images/'):
+        os.makedirs('./images/')
+    if not os.path.exists( para_path + '/'):
+        os.makedirs(para_path + '/')
+    if not os.path.exists('./cifar10_train_log/cifar10_log.csv'):
         with open('./cifar10_train_log/cifar10_log.csv', 'w')as f:
             writer = csv.writer(f)
             header = ['model', 'traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
@@ -39,7 +40,7 @@ def main(args):
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
     """
     es_cb = EarlyStopping(monitor='loss', min_delta=0, patience=1, verbose=1, mode='auto')
-    csv_logger = CSVLogger('./cifar10_train_log/' + para_str + '/' + 'cifar10_log.csv', separator=',')
+    csv_logger = CSVLogger( para_path + '/cifar10_log.csv', separator=',')
 
     callbacks = []
     callbacks.append(csv_logger)
@@ -88,7 +89,7 @@ def main(args):
                                     callbacks = callbacks)
 
     # 学習履歴をプロット
-    tools.plot_history(history, para_str)
+    tools.plot_history(history, para_str, para_path)
 
     """ evaluate model """
     score =cnn_model.evaluate(x_test, y_test, verbose=1)
