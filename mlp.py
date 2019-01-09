@@ -53,7 +53,7 @@ def main(args, classes):
             header = ['traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
     
-    base_lr = 0.01
+    base_lr = 0.001
     lr_decay_rate = 1/10
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
