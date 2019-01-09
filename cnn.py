@@ -59,10 +59,8 @@ def main(args, classes):
         cnn_model = model.tinycnn_model(input_shape, len(classes))
     elif args.model == 'full':
         cnn_model = model.cnn_fullmodel(input_shape, len(classes))
-    elif args.model == 'v3':
-        cnn_model = model.inceptionv3_finetune_model(input_shape, len(classes))
     else:
-        raise SyntaxError("please select model : 'tiny' or 'full' or 'v3'. ")
+        raise SyntaxError("please select model : 'tiny' or 'full' ")
     
     """ select optimizer """
     if args.opt == 'SGD':

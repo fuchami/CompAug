@@ -24,10 +24,10 @@ def mlp(input_shape, classes):
     model.add(Dense(1, activation='relu', input_shape=(input_shape)))
     model.add(Flatten())
 
-    model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.2))
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.25))
 
     model.add(Dense(classes, activation='softmax'))
     model.summary()
@@ -53,7 +53,7 @@ def main(args, classes):
             header = ['traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
     
-    base_lr = 0.1
+    base_lr = 0.01
     lr_decay_rate = 1/10
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
@@ -66,12 +66,12 @@ def main(args, classes):
     train_generator, valid_generator = mlp_load.augmentGenerator(args, classes)
 
     """ build model """
-    input_shape = (args.imgsize, args.imgsize, 1, )
+    input_shape = (args.imgsize, args.imgsize, 3, )
     mlp_model = mlp(input_shape, len(classes))
 
     """ select optimizer """
     if args.opt == 'SGD':
-        opt = SGD(lr=base_lr, momentum=0.9, nesterov=True)
+        opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         print("-- optimizer: SGD --")
     else:
         raise SyntaxError("please select optimizer: 'SGD' or 'Adam'. ")
@@ -89,12 +89,21 @@ def main(args, classes):
         nb_epoch = args.epochs,
         callbacks = callbacks,
         validation_data = valid_generator,
-        validation_steps = 1)
+        validation_steps = 150// args.batchsize)
     
     # 学習履歴をプロット
     tools.plot_history(history, para_str, para_path)
 
-    return
+    """ evaluate model """
+    valid_generator.reset()
+    score = mlp_model.evaluate_generator(generator=valid_generator, steps=valid_generator.samples)
+    print("model score:", score)
+
+    """ 学習結果をCSV出力 """
+    with open('./mlp_log/log.csv', 'a') as f:
+        data = [args.trainsize, args.aug_mode, args.opt, score[1], score[0]]
+        writer = csv.writer(f)
+        writer.writerow(data)
 
 if __name__ == "__main__":
 

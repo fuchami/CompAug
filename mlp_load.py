@@ -23,17 +23,55 @@ def augmentGenerator(args, classes):
     elif args.aug_mode == 'aug':
         print('-- load image data generator with augmentation --')
         train_datagen = ImageDataGenerator(rescale=1.0/255,
-                                            shear_range=0.2,
-                                            zoom_range=0.2,
-                                            width_shift_range=0.2,
-                                            height_shift_range=0.2)
-    
+                                            shear_range=0.1,
+                                            zoom_range=0.1,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1)
+    elif args.aug_mode == 'mixup':
+        print('-- load image data generator with mixup --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            mix_up_alpha=0.2)
+    elif args.aug_mode == 'erasing':
+        print('-- load image data generator with random erasing --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            random_erasing=True)
+    elif args.aug_mode == 'aug_mixup':
+        print('-- load image data generator with mixup & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=0.1,
+                                            zoom_range=0.1,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1,
+                                            mix_up_alpha=0.2)
+    elif args.aug_mode == 'aug_erasing':
+        print('-- load image data generator with random erasing & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=0.1,
+                                            zoom_range=0.1,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1,
+                                            random_erasing=True)
+    elif args.aug_mode == 'mixup_erasing':
+        print('-- load image data generator with random erasing --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            mix_up_alpha=0.2,
+                                            random_erasing=True)
+    elif args.aug_mode == 'aug_mixup_erasing':
+        print('-- load image data generator with random erasing & mixup & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=0.1,
+                                            zoom_range=0.1,
+                                            width_shift_range=0.1,
+                                            height_shift_range=0.1,
+                                            mix_up_alpha=0.1,
+                                            random_erasing=True)
+
     valid_datagen = ImageDataGenerator(rescale=1.0/255)
 
     train_generator = train_datagen.flow_from_directory(
         trainpath,
         target_size=(args.imgsize, args.imgsize),
-        color_mode='grayscale',
+        color_mode='rgb',
         classes=classes,
         class_mode='categorical',
         batch_size=args.batchsize,
@@ -42,13 +80,12 @@ def augmentGenerator(args, classes):
     valid_generator = valid_datagen.flow_from_directory(
         directory=args.validpath,
         target_size=(args.imgsize, args.imgsize),
-        color_mode='grayscale',
+        color_mode='rgb',
         classes=classes,
         class_mode='categorical',
         shuffle=True)
     
     return train_generator, valid_generator
-
 
 class MyImageDataGenerator(ImageDataGenerator):
     def __init__(self, featurewise_center=False, samplewise_center=False,
@@ -135,8 +172,6 @@ class MyImageDataGenerator(ImageDataGenerator):
         # 拡張処理
         while True:
             batch_x, batch_y = next(batches)
-            print('batch_x:', batch_x)
-            print('batch_y:', batch_y)
 
             """ mix up """
             if self.mix_up_alpha > 0:
