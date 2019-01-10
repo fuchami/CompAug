@@ -248,6 +248,85 @@ class MyImageDataGenerator(ImageDataGenerator):
             
             yield(batch_x, batch_y)
 
+def OneImageGenerator(args, classes):
+
+    if args.aug_mode == 'non':
+        print('-- load image data generator with non augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255)
+    elif args.aug_mode == 'aug':
+        print('-- load image data generator with augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=args.aug_para,
+                                            zoom_range=args.aug_para,
+                                            rotation_range=180,
+                                            width_shift_range=args.aug_para,
+                                            height_shift_range=args.aug_para)
+    elif args.aug_mode == 'mixup':
+        print('-- load image data generator with mixup --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            mix_up_alpha=args.aug_para)
+    elif args.aug_mode == 'erasing':
+        print('-- load image data generator with random erasing --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            random_erasing=True)
+    elif args.aug_mode == 'aug_mixup':
+        print('-- load image data generator with mixup & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=args.aug_para,
+                                            zoom_range=args.aug_para,
+                                            rotation_range=180,
+                                            width_shift_range=args.aug_para,
+                                            width_shift_range=args.aug_para,
+                                            height_shift_range=args.aug_para,
+                                            mix_up_alpha=args.aug_para)
+    elif args.aug_mode == 'aug_erasing':
+        print('-- load image data generator with random erasing & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=args.aug_para,
+                                            zoom_range=args.aug_para,
+                                            rotation_range=180,
+                                            width_shift_range=args.aug_para,
+                                            width_shift_range=args.aug_para,
+                                            height_shift_range=args.aug_para,
+                                            random_erasing=True)
+    elif args.aug_mode == 'mixup_erasing':
+        print('-- load image data generator with mixup & random erasing --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            mix_up_alpha=args.aug_para,
+                                            random_erasing=True)
+    elif args.aug_mode == 'aug_mixup_erasing':
+        print('-- load image data generator with random erasing & mixup & augmentation --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=args.aug_para,
+                                            zoom_range=args.aug_para,
+                                            rotation_range=180,
+                                            width_shift_range=args.aug_para,
+                                            width_shift_range=args.aug_para,
+                                            height_shift_range=args.aug_para,
+                                            mix_up_alpha=args.aug_para,
+                                            random_erasing=True)
+
+    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
+
+    train_generator = train_datagen.flow_from_directory(
+        args.trainpath,
+        target_size=(args.imgsize, args.imgsize),
+        color_mode='rgb',
+        classes=classes,
+        class_mode='categorical',
+        batch_size=args.batchsize,
+        shuffle=True)
+
+    valid_generator = valid_datagen.flow_from_directory(
+        directory=args.validpath,
+        target_size=(args.imgsize, args.imgsize),
+        color_mode='rgb',
+        classes=classes,
+        class_mode='categorical',
+        shuffle=True)
+
+    return train_generator, valid_generator
+
 
 def cifar10Generator(args):
 

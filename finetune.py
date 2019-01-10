@@ -16,13 +16,13 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Dense, Flatten, Dropout
 
-import tools, mlp_load, model
+import tools, mlp_load, model, load
 
 def main(args, classes):
 
     """ log params """
-    para_str = 'densenet_trainsize_{}_{}_epoch{}_imgsize{}_batchsize{}_{}'.format(
-        args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
+    para_str = 'densenet_augmode_{}{}_epoch{}_imgsize{}_batchsize{}_{}'.format(
+        args.aug_mode, args.aug_para, args.epochs, args.imgsize, args.batchsize, args.opt)
     print("start this params train: ", para_str)
     para_path = './densenet_log/' + para_str
 
@@ -47,7 +47,7 @@ def main(args, classes):
     callbacks.append(reduce_lr)
 
     """ load image using image data generator """
-    train_generator, valid_generator = mlp_load.augmentGenerator(args, classes)
+    train_generator, valid_generator = load.OneImageGenerator(args, classes)
 
     """ build model """
     input_shape = (args.imgsize, args.imgsize, 3, )
@@ -99,11 +99,12 @@ if __name__ == "__main__":
     parser.add_argument('--trainsize', '-t', type=str, default='full')
     parser.add_argument('--validpath', type=str, default='../DATASETS/OneImagetrain/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=80)
-    parser.add_argument('--imgsize', '-s', type=int, default=244)
+    parser.add_argument('--imgsize', '-s', type=int, default=224)
     parser.add_argument('--batchsize', '-b', type=int, default=16)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='non, aug, mixup, erasing, fullaug')
+    parser.add_argument('--aug_para', '-p', type=float, default=0.1)
     # 最適化関数
     parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')
