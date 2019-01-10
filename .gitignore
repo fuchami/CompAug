@@ -1,5 +1,7 @@
 .DS_Store
 /csv_log/
+/train_log/
+/cifar10_train_log/
 *.jpg
 *.csv
 *.pyc

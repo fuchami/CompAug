@@ -21,8 +21,7 @@ import tools, mlp_load
 """ mlp model """
 def mlp(input_shape, classes):
     model = Sequential()
-    model.add(Dense(1, activation='relu', input_shape=(input_shape)))
-    model.add(Flatten())
+    model.add(Flatten(input_shape=(input_shape)))
 
     model.add(Dense(1024, activation='relu'))
     model.add(Dropout(0.25))
@@ -37,8 +36,8 @@ def mlp(input_shape, classes):
 def main(args, classes):
 
     """ log params """
-    para_str = 'mlp_trainsize_{}_{}_epoch{}_imgsize{}_batchsize{}_{}'.format(
-        args.trainsize, args.aug_mode, args.epochs, args.imgsize, args.batchsize, args.opt)
+    para_str = 'mlp_trainsize_{}_{}_para{}_epoch{}_imgsize{}_batchsize{}_opt{}{}'.format(
+        args.trainsize, args.aug_mode, args.aug_para, args.epochs, args.imgsize, args.batchsize, args.opt, args.lr)
     print("start this params train: ", para_str)
     para_path = './mlp_log/' + para_str
 
@@ -53,7 +52,7 @@ def main(args, classes):
             header = ['traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
     
-    base_lr = 0.001
+    base_lr = args.lr
     lr_decay_rate = 1/10
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
@@ -73,11 +72,13 @@ def main(args, classes):
     if args.opt == 'SGD':
         opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
         print("-- optimizer: SGD --")
+    if args.opt == 'SGD':
+        opt = SGD(lr=base_lr, momentum=0.9, decay=1e-6, nesterov=True)
+        print("-- optimizer: SGD --")
     else:
         raise SyntaxError("please select optimizer: 'SGD' or 'Adam'. ")
     
-    plot_model(mlp_model, to_file='./images/mlp.png', show_shapes=True)
-
+    plot_model(mlp_model, to_file='./images/mlp.png', show_shapes=True) 
     mlp_model.compile(loss='categorical_crossentropy',
                     optimizer= opt,
                     metrics=['accuracy'])
@@ -116,13 +117,15 @@ if __name__ == "__main__":
     parser.add_argument('--validpath', type=str, default='../DATASETS/compare_dataset/valid/')
     parser.add_argument('--epochs', '-e', type=int, default=80)
     parser.add_argument('--imgsize', '-s', type=int, default=32)
-    parser.add_argument('--batchsize', '-b', type=int, default=16)
+    parser.add_argument('--batchsize', '-b', type=int, default=32)
     # 水増しなし 水増しあり mixup を選択
     parser.add_argument('--aug_mode', '-a', default='non',
                         help='non, aug, mixup, erasing, fullaug')
+    parser.add_argument('--aug_para', '-p', type=float, default=0.1)
     # 最適化関数
     parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')
+    parser.add_argument('--lr', '-l', type=float, default=0.01)
 
     args = parser.parse_args()
 
