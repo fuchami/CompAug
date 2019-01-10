@@ -3,6 +3,7 @@ from keras.models import Sequential, Model
 from keras.layers import Conv2D, MaxPooling2D, Dense, GlobalAveragePooling2D
 from keras.layers import Activation, Flatten, BatchNormalization, Dropout, Input
 from keras.applications.inception_v3 import InceptionV3
+from keras.applications.densenet import DenseNet121
 
 # multi layer perceptron
 def mlp(input_shape, classes):
@@ -107,3 +108,19 @@ def inceptionv3_finetune_model(input_shape, classes):
     model.summary()
 
     return model
+
+def densenet_finetue(input_shape, classes):
+    Input_shape = Input(shape=input_shape)
+    densenet = DenseNet121(weights='imagenet', include_top=False, pooling='avg', input_tensor=Input_shape)
+    densenet.trainable = False
+    densenet.summary()
+
+    x_in = Input_shape
+    x = densenet(x_in)
+    x = Dense(128, activation='relu')(x)
+    x = Dense(classes, activation='softmax')(x)
+
+    model.summary()
+
+    return model
+

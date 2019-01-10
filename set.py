@@ -82,14 +82,52 @@ def split_test_train_valid(args):
             shutil.copyfile("%strain_full/%s/%s" % (args.tarpath, class_path, i),
                             "%strain_tiny/%s/%s" % (args.tarpath, class_path, i))
 
+    return
+
+def split_OneImageChoise(args):
+    print("datasets split oneimagetrain/valid")
+
+    class_path_list = os.listdir(args.srcpath)
+    print(class_path_list)
+
+    for class_path in class_path_list:
+        print(class_path)
+
+        # クラス内の画像ファイルリストを取得
+        img_list = os.listdir(args.srcpath + class_path)
+        
+        # 取得したリストをシャッフル
+        random.shuffle(img_list)
+
+        # 移動先のディレクトリがなければ作成
+        if not os.path.exists(args.tarpath + 'train/' + class_path):
+            os.makedirs(args.tarpath + 'train/' + class_path)
+        if not os.path.exists(args.tarpath + 'valid/' + class_path):
+            os.makedirs(args.tarpath + 'valid/' + class_path)
+
+        # ひとまず全てを検証データにコピー
+        for i in img_list:
+            print(i)
+            shutil.copyfile("%s%s/%s" % (args.srcpath, class_path, i),
+                            "%svalid/%s/%s" % (args.tarpath, class_path, i))
+
+        img_num = 1 
+        print("img_num: ", img_num)
+        choice = np.random.choice(img_list, img_num, replace=False)
+
+        # 1枚だけ訓練データに
+        for i in choice[:img_num]:
+            shutil.move("%svalid/%s/%s" % (args.tarpath, class_path, i),
+                        "%strain/%s/%s" % (args.tarpath, class_path, i))
 
     return
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='datasets split train/test/valid')
     parser.add_argument('--srcpath', '-s', type=str, default='../DATASETS/datasets_crop/')
-    parser.add_argument('--tarpath', '-t', type=str, default='../DATASETS/compare_dataset/')
+    parser.add_argument('--tarpath', '-t', type=str, default='../DATASETS/OneImagetrain/')
 
     args = parser.parse_args()
-    split_test_train_valid(args)
+    # split_test_train_valid(args)
+    split_OneImageChoise(args)
     
