@@ -11,68 +11,6 @@ import keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.datasets import cifar10
 
-# ジェネレーター
-def AugmentGenerator(args, classes):
-    if args.trainsize == 'full':
-        trainpath = args.trainpath + 'train_full/'
-    elif args.trainsize == 'half':
-        trainpath = args.trainpath + 'train_half/'
-    elif args.trainsize == 'tiny':
-        trainpath = args.trainpath + 'train_tiny/'
-    else:
-        raise SyntaxError("please select optimizer: 'full' or 'half' or 'tiny'. ")
-
-    if args.aug_mode == 'non':
-        print('-- load image data generator with non augmentation --')
-        train_datagen = ImageDataGenerator(rescale=1.0/255)
-    elif args.aug_mode == 'aug':
-        print('-- load image data generator with augmentation --')
-        train_datagen = ImageDataGenerator(rescale=1.0/255,
-                                            shear_range=0.2,
-                                            zoom_range=0.2,
-                                            width_shift_range=0.2,
-                                            height_shift_range=0.2)
-    elif args.aug_mode == 'mixup':
-        print('-- load image data generator with mixup --')
-        train_datagen = MyImageDataGenerator(rescale=1.0/255,
-                                            mix_up_alpha=0.2)
-    elif args.aug_mode == 'erasing':
-        print('-- load image data generator with random erasing --')
-        train_datagen = MyImageDataGenerator(rescale=1.0/255,
-                                            random_erasing=True)
-    elif args.aug_mode == 'fullaug':
-        print('-- load image data generator with FULL AUGMENTATION ! --')
-        train_datagen = MyImageDataGenerator(rescale=1.0/255,
-                                            shear_range=0.2,
-                                            zoom_range=0.2,
-                                            width_shift_range=0.2,
-                                            height_shift_range=0.2,
-                                            mix_up_alpha=0.2,
-                                            random_erasing=True)
-    else:
-        raise SyntaxError("please select ImageDataGenerator: 'non' or 'aug' or 'mixup' or 'erasing' or 'full'. ")
-
-    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
-
-    train_generator = train_datagen.flow_from_directory(
-        trainpath,
-        target_size=(args.imgsize, args.imgsize),
-        color_mode='rgb',
-        classes=classes,
-        class_mode='categorical',
-        batch_size=args.batchsize,
-        shuffle=True)
-
-    valid_generator = valid_datagen.flow_from_directory(
-        directory=args.validpath,
-        target_size=(args.imgsize, args.imgsize),
-        color_mode='rgb',
-        classes=classes,
-        class_mode='categorical',
-        shuffle=True)
-
-    return train_generator, valid_generator
-
 class MyImageDataGenerator(ImageDataGenerator):
     def __init__(self, featurewise_center=False, samplewise_center=False,
                 featurewise_std_normalization=False, sampleWise_std_normalization=False,
@@ -247,6 +185,69 @@ class MyImageDataGenerator(ImageDataGenerator):
                 batch_x = x
             
             yield(batch_x, batch_y)
+
+# ジェネレーター
+def AugmentGenerator(args, classes):
+    if args.trainsize == 'full':
+        trainpath = args.trainpath + 'train_full/'
+    elif args.trainsize == 'half':
+        trainpath = args.trainpath + 'train_half/'
+    elif args.trainsize == 'tiny':
+        trainpath = args.trainpath + 'train_tiny/'
+    else:
+        raise SyntaxError("please select optimizer: 'full' or 'half' or 'tiny'. ")
+
+    if args.aug_mode == 'non':
+        print('-- load image data generator with non augmentation --')
+        train_datagen = ImageDataGenerator(rescale=1.0/255)
+    elif args.aug_mode == 'aug':
+        print('-- load image data generator with augmentation --')
+        train_datagen = ImageDataGenerator(rescale=1.0/255,
+                                            shear_range=0.2,
+                                            zoom_range=0.2,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2)
+    elif args.aug_mode == 'mixup':
+        print('-- load image data generator with mixup --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            mix_up_alpha=0.2)
+    elif args.aug_mode == 'erasing':
+        print('-- load image data generator with random erasing --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            random_erasing=True)
+    elif args.aug_mode == 'fullaug':
+        print('-- load image data generator with FULL AUGMENTATION ! --')
+        train_datagen = MyImageDataGenerator(rescale=1.0/255,
+                                            shear_range=0.2,
+                                            zoom_range=0.2,
+                                            width_shift_range=0.2,
+                                            height_shift_range=0.2,
+                                            mix_up_alpha=0.2,
+                                            random_erasing=True)
+    else:
+        raise SyntaxError("please select ImageDataGenerator: 'non' or 'aug' or 'mixup' or 'erasing' or 'full'. ")
+
+    valid_datagen = ImageDataGenerator(rescale=1.0 / 255)
+
+    train_generator = train_datagen.flow_from_directory(
+        trainpath,
+        target_size=(args.imgsize, args.imgsize),
+        color_mode='rgb',
+        classes=classes,
+        class_mode='categorical',
+        batch_size=args.batchsize,
+        shuffle=True)
+
+    valid_generator = valid_datagen.flow_from_directory(
+        directory=args.validpath,
+        target_size=(args.imgsize, args.imgsize),
+        color_mode='rgb',
+        classes=classes,
+        class_mode='categorical',
+        shuffle=True)
+
+    return train_generator, valid_generator
+
 
 def OneImageGenerator(args, classes):
 
