@@ -113,12 +113,13 @@ def densenet_finetue(input_shape, classes):
     Input_shape = Input(shape=input_shape)
     densenet = DenseNet121(weights='imagenet', include_top=False, pooling='avg', input_tensor=Input_shape)
     densenet.trainable = False
-    densenet.summary()
+    # densenet.summary()
 
     x_in = Input_shape
     x = densenet(x_in)
     x = Dense(128, activation='relu')(x)
     x = Dense(classes, activation='softmax')(x)
+    model = Model(x_in, x)
 
     model.summary()
 

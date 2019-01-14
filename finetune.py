@@ -21,8 +21,8 @@ import tools, mlp_load, model, load
 def main(args, classes):
 
     """ log params """
-    para_str = 'densenet_augmode_{}{}_epoch{}_imgsize{}_batchsize{}_{}'.format(
-        args.aug_mode, args.aug_para, args.epochs, args.imgsize, args.batchsize, args.opt)
+    para_str = 'densenet_augmode_{}{}_epoch{}_imgsize{}_batchsize{}_{}{}'.format(
+        args.aug_mode, args.aug_para, args.epochs, args.imgsize, args.batchsize, args.opt,args.lr)
     print("start this params train: ", para_str)
     para_path = './densenet_log/' + para_str
 
@@ -37,7 +37,7 @@ def main(args, classes):
             header = ['traindata_size', 'augmentation_mode', 'optimizer', 'validation accuracy', 'validation loss']
             writer.writerow(header)
     
-    base_lr = 1e-4
+    base_lr = args.lr 
     lr_decay_rate = 1/10
     lr_steps = 4
     reduce_lr = LearningRateScheduler(lambda ep: float(base_lr * lr_decay_rate ** (ep * lr_steps // args.epochs)), verbose=1)
@@ -108,6 +108,7 @@ if __name__ == "__main__":
     # 最適化関数
     parser.add_argument('--opt', '-o', default='SGD',
                         help='SGD Adam AMSGrad ')
+    parser.add_argument('--lr', '-l', type=float, default=0.01)
 
     args = parser.parse_args()
 

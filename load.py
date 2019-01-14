@@ -276,7 +276,6 @@ def OneImageGenerator(args, classes):
                                             zoom_range=args.aug_para,
                                             rotation_range=180,
                                             width_shift_range=args.aug_para,
-                                            width_shift_range=args.aug_para,
                                             height_shift_range=args.aug_para,
                                             mix_up_alpha=args.aug_para)
     elif args.aug_mode == 'aug_erasing':
@@ -285,7 +284,6 @@ def OneImageGenerator(args, classes):
                                             shear_range=args.aug_para,
                                             zoom_range=args.aug_para,
                                             rotation_range=180,
-                                            width_shift_range=args.aug_para,
                                             width_shift_range=args.aug_para,
                                             height_shift_range=args.aug_para,
                                             random_erasing=True)
@@ -300,7 +298,6 @@ def OneImageGenerator(args, classes):
                                             shear_range=args.aug_para,
                                             zoom_range=args.aug_para,
                                             rotation_range=180,
-                                            width_shift_range=args.aug_para,
                                             width_shift_range=args.aug_para,
                                             height_shift_range=args.aug_para,
                                             mix_up_alpha=args.aug_para,
